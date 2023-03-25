@@ -1,0 +1,273 @@
+syntax = "proto3";
+package OpenFHE;
+
+/* 
+ * The secret key distribution for CKKS should either be SPARSE_TERNARY or UNIFORM_TERNARY.
+ */
+enum SecretKeyDist {
+    GAUSSIAN        = 0;
+    UNIFORM_TERNARY = 1;
+    SPARSE_TERNARY  = 2;
+}
+/*
+* Rescale Operation:
+* Whenever we multiply two ciphertexts c1 and c2 which encrypt numbers m1*D and m2*D respectively, 
+* we get a result that looks like m1*m2*D^2. Since the scaling factor of this number is D^2, we say 
+* that the result is of depth 2. It is clear that a ciphertext of depth 2 cannot be added to ciphertexts 
+* of depth 1, because their scaling factors are different. Rescaling takes a ciphertext of depth 2, and 
+* makes it of depth 1 by an operation that looks a lot like dividing by D=2^p.
+*
+* For efficiency reasons, our implementation of CKKS works in the RNS space, which means that we avoid 
+* working with big numbers and we only work with native integers. One complication that arises
+* from this is that we can only rescale by dividing by certain prime numbers and not D=2^p.
+*
+* Ways to deal with this:
+* 1.FIXEDMANUAL: choose prime numbers as close to 2^p as possible, and assume that the scaling factor 
+* remains the same. This inevitably incurs some approximation error. Need to use rescale() manually.
+* 
+* 2.FLEXIBLEAUTO: track how the scaling factor changes and try to adjust for it. It automatically performs
+* rescaling before every multiplication. It tracks the exact scaling factor of all ciphertexts.This means that 
+* computations in FLEXIBLEAUTO will be more accurate than the same computations in FIXEDMANUAL. Keep in mind that
+* this difference only becomes apparent when dealing with computations of large multiplicative depth; this
+* is because a large multiplicative depth means we need to find more prime numbers sufficiently close to D=2^p, 
+* and this becomes harder and harder as the multiplicative depth increases.
+* 
+* 3.FIXEDAUTO: an automated version of FIXEDMANUAL that does all rescaling automatically.it hides all 
+* the nuances of tracking the depth of ciphertexts and having to call the rescale operation. Therefore,
+* FIXEDAUTO is more appropriate for users. On the contrary, FIXEDMANUAL is more appropriate for 
+* production applications that have been optimized by experts.
+* 
+* In CKKS, ciphertexts are defined versus a large ciphertext modulus Q. Whenever we rescale a ciphertext, 
+* its ciphertext modulus becomes smaller too. All homomorphic operations require that their inputs are
+* defined over the same ciphertext modulus, and therefore, we need to adjust one of them if their 
+* ciphertext moduli do not match. The way this is done in the original CKKS paper is through an operation 
+* called Modulus Switch. In our implementation, we call this operation LevelReduce, and both FIXEDMANUAL 
+* and FIXEDAUTO do it automatically.
+*
+*/
+enum ScalingTechnique {
+    FIXEDMANUAL          = 0;
+    FIXEDAUTO            = 1;
+    FLEXIBLEAUTO         = 2;
+    FLEXIBLEAUTOEXT      = 3;
+    NORESCALE            = 4;
+    INVALID_RS_TECHNIQUE = 5;
+};
+
+// For most cases, HYBRID will be the most appropriate and efficient key switching technique
+enum KeySwitchTechnique {
+    INVALID_KS_TECH = 0;
+    BV              = 1;
+    HYBRID          = 2;
+};
+/* 
+ * "NotSet": run more quickly with a smaller ring dimension. Note that this should be used only in
+ * non-production environments, or by experts who understand the security implications of their choices. 
+ * In production-like environments, we recommend using HEStd_128_classic, HEStd_192_classic, 
+ * or HEStd_256_classic for 128-bit, 192-bit, or 256-bit security, respectively. 
+ * If you choose one of these as your security level, you do not need to set the ring dimension.
+ */
+enum SecurityLevel {
+    HEStd_128_classic = 0;
+    HEStd_192_classic = 1;
+    HEStd_256_classic = 2;
+    HEStd_NotSet      = 3;
+};
+
+enum MultiplicationTechnique {
+    BEHZ             = 0;
+    HPS              = 1;
+    HPSPOVERQ        = 2;
+    HPSPOVERQLEVELED = 3;
+};
+
+enum ProxyReEncryptionMode {
+    NOT_SET              = 0;
+    INDCPA               = 1;
+    FIXED_NOISE_HRA      = 2;
+    NOISE_FLOODING_HRA   = 3;
+    DIVIDE_AND_ROUND_HRA = 4;
+}
+
+/*
+ * EXEC_EVALUATION: input noise estimate and perform the desired secure encrypted computation.
+ * EXEC_NOISE_ESTIMATION: estimate the noise we need to add to the actual computation to guarantee good security.
+ * resulting plaintext will estimate the amount of noise in the computation.
+ */
+enum ExecutionMode {
+    EXEC_EVALUATION       = 0;
+    EXEC_NOISE_ESTIMATION = 1;
+};
+
+/* 
+ * Decryption noise mode in CKKS
+ * NOISE_FLOODING_DECRYPT is more secure than FIXED_NOISE_DECRYPT, but it requires executing all 
+ * computations twice.
+ */
+enum DecryptionNoiseMode {
+    FIXED_NOISE_DECRYPT    = 0;
+    NOISE_FLOODING_DECRYPT = 1;
+}
+
+message FHEParameter {
+    uint32                  multiplicativeDepth     = 1;
+    uint64                  plaintextModulus        = 2;
+    // max batch size of messages to be packed in encoding (number of slots)
+    uint32                  batchSize               = 3;
+    /*
+     * The digit size is only used in BV key switching and it allows us to perform digit decomposition at a finer 
+     * granularity. Under normal circumstances, digit decomposition is what we call RNS decomposition, i.e., 
+     * each digit is roughly the size of the qi's that comprise the ciphertext modulus Q. When using BV, 
+     * in certain cases like having to perform rotations without any preceding multiplication, we need to have 
+     * smaller digits to prevent noise from corrupting the result. In this case, using digitSize = 10 does the  
+     * trick. set this to 0 (i.e., RNS decomposition) and see how the results are incorrect.
+     * 
+     * decrease digitSize to see the accuracy increase, and performance decrease
+     */    
+    uint32                  digitSize               = 4;
+    float                   standardDeviation       = 5;
+    SecretKeyDist           secretKeyDist           = 6;
+    // Max relinearization degree of secret key polynomial (used for lazy relinearization)
+    int32                   maxRelinSkDeg           = 7;
+    KeySwitchTechnique      ksTech                  = 8;
+    ScalingTechnique        scalTech                = 9;
+    /* 
+     * firstModSize and scalingModSize are used to calculate ciphertext modulus. 
+     * The ciphertext modulus should be seen as: Q = q_0 * q_1 * ... * q_n * q'
+     * where q_0 is first prime, and it's number of bits is firstModSize, recommend to be 59
+     * other q_i have same number of bits and is equal to scalingModSize, recommend to be 60
+     * the prime q' is not explicitly given, but it is used internally in CKKS and BGV schemes
+     */
+    uint32                  firstModSize            = 10;
+    uint32                  scalingModSize          = 14;
+    /* 
+     * numLargeDigits: number of digits in HYBRID key switching
+     * In our RNS implementation of CKKS, every ciphertext corresponds to a large number (which is represented as 
+     * small integers in RNS) modulo a ciphertext modulus Q, which is defined as the product of
+     * (multDepth+1) prime numbers: Q = q0 * q1 * ... * qL. Each qi is selected to be close to the scaling factor 
+     * D=2^p, hence the total size of Q is approximately: sizeof(Q) = (multDepth + 1) * scaleModSize
+     *
+     * HYBRID key switching takes a number d that's defined modulo Q, and performs 4 steps:
+     * 1 - Digit decomposition:
+     *     Split d into numLargeDigits digits - the size of each digit is roughly ceil(sizeof(Q)/numLargeDigits)
+     * 2 - Extend ciphertext modulus from Q to Q*P. Here P is a product of special primes
+     * 3 - Multiply extended component with key switching key
+     * 4 - Decrease the ciphertext modulus back down to Q
+     *
+     * It's not necessary to understand how all these stages work, as long as it's clear that the size of the 
+     * ciphertext modulus is increased from sizeof(Q) to sizeof(Q)+sizeof(P) in stage 2. P is always set to be as 
+     * small as possible, as long as sizeof(P) is larger than the size of the largest digit, i.e., than
+     * ceil(sizeof(Q)/numLargeDigits). Therefore, the size of P is inversely related to the number of digits, 
+     * so the more digits we have, the smaller P has to be.
+     *
+     * The tradeoff here is that more digits means that the digit decomposition stage becomes more expensive, 
+     * but the maximum size of the ciphertext modulus Q*P becomes smaller. Since the size of Q*P determines 
+     * the necessary ring dimension to achieve a certain security level, more digits can in some
+     * cases mean that we can use smaller ring dimension and get better performance overall.
+     *
+     */
+    uint32                  numLargeDigits          = 12;
+    SecurityLevel           securityLevel           = 15;
+    /*
+     * ring dimension N of the scheme : the ring is Z_Q[x] / (X^N+1)
+     * set to 0 to let the library choose it based on securityLevel
+     */
+    uint32                  ringDim                 = 16;
+    // number of additions (used for setting noise in BGV and BFV)
+    uint32                  evalAddCount            = 17;
+    // number of key switching operations (used for setting noise in BGV and BFV)
+    uint32                  keySwitchCount          = 18;
+    MultiplicationTechnique multiplicationTechnique = 20;
+    // size of moduli used for PRE in the provable HRA setting
+    uint32                  multiHopModSize         = 21;
+    ProxyReEncryptionMode   PREMode                 = 22;
+    ExecutionMode           executionMode           = 24;
+
+    DecryptionNoiseMode     decryptionNoiseMode     = 25;
+    double                  noiseEstimate           = 26;
+    // double                  desiredPrecision        = 27; 
+    /*
+     * Statistical security of CKKS in NOISE_FLOODING_DECRYPT mode. This is the bound on the probability of success
+     * that any adversary can have. Specifically, a probability of success of at most 2^(-statisticalSecurity).
+     */
+    double                  statisticalSecurity     = 28;
+    /* 
+     * Number of adversarial queries a user is expecting for their application in NOISE_FLOODING_DECRYPT mode.
+     */
+    double                  numAdversarialQueries   = 29;
+    // features supported by public key encryption schemes
+    bool                    PKE                     = 30;
+    bool                    KEYSWITCH               = 31;
+    bool                    PRE                     = 32;
+    bool                    LEVELEDSHE              = 33;
+    bool                    ADVANCEDSHE             = 34;
+    bool                    MULTIPARTY              = 35;
+    bool                    FHE                     = 36;
+    /* 
+     * Bootstrapping: 
+     * The goal of bootstrapping is to increase the number of available levels we have, or in other words,
+     * to dynamically increase the multiplicative depth. However, the bootstrapping procedure itself
+     * needs to consume a few levels to run. We compute the number of bootstrapping levels required
+     * using GetBootstrapDepth, and add it to levelsUsedBeforeBootstrap to set our initial multiplicative depth.
+     *
+     * We set a budget for the number of levels we can consume in bootstrapping for encoding and decoding, respectively.
+     * Using larger numbers of levels reduces the complexity and number of rotation keys,
+     * but increases the depth required for bootstrapping.
+	 * We must choose values smaller than ceil(log2(slots)). A level budget of {4, 4} is good for higher ring
+     * dimensions (65536 and higher).
+     */
+     uint32 levelBudget1 = 40;
+     uint32 levelBudget2 = 41;
+ 
+     // approximate the number of levels bootstrapping will consume to help set initial multiplicative depth.
+     uint32 approxBootstrapDepth = 42;
+     /* 
+      * We give the user the option of configuring values for an optimization algorithm in bootstrapping.
+      * Here, we specify the giant step for the baby-step-giant-step algorithm in linear transforms
+      * for encoding and decoding, respectively. Either choose this to be a power of 2 or an exact divisor 
+      * of the number of slots. Setting {0, 0} allows OpenFHE to choose the values automatically.
+      */
+     uint32 bsgsDim1 = 43;
+     uint32 bsgsDim2 = 44;
+     repeated int32 shiftIndexes = 45;
+}
+
+message EvalData {
+    message OneDataList {
+        repeated double dataList = 1;
+    }
+    uint32 len = 1;   // length of each data list
+    repeated OneDataList allDataLists = 2;
+}
+
+message APISequence {
+    message OneAPI {
+        message AddTwoList {
+            uint32 src1 = 1;
+            uint32 src2 = 2;
+        }
+        message AddManyList {
+            repeated uint32 src = 1;
+        }
+        message MulTwoList {
+            uint32 src1 = 1;
+            uint32 src2 = 2;
+        }
+        message MulManyList {
+            repeated uint32 src = 1;
+        }
+        message ShiftOneList {
+            uint32 src = 1;
+            uint32 index = 2;
+        }    
+        oneof api{
+            AddTwoList addTwoList = 1;
+            AddManyList addManyList = 2;
+            MulTwoList mulTwoList = 3;
+            MulManyList mulManyList = 4;
+            ShiftOneList shiftOneList = 5;
+        };
+        uint32 dst = 6;
+    }
+    repeated OneAPI apiList = 1;
+}

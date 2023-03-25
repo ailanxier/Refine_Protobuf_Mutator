@@ -1,0 +1,5 @@
+syntax = "proto3";
+message Root {
+    int32 test = 1;
+    int64 lt = 2;
+}

@@ -1,0 +1,8 @@
+set(FHE_PROTO_SRC fhe.pb.cc)
+add_executable(create_proto_input create_proto_input.cc ${FHE_PROTO_SRC})
+target_include_directories(create_proto_input PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(create_proto_input protobuf)
+# set(POSTPROCESS_SRC fhe_protobuf_mutator.cc)
+# add_library(fhe_protobuf_mutator SHARED ${POSTPROCESS_SRC} ${FHE_PROTO_SRC})
+# add_dependencies(fhe_protobuf_mutator aflpm)
+# target_link_libraries(fhe_protobuf_mutator aflpm)
