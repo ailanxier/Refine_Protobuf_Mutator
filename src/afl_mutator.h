@@ -15,10 +15,7 @@
 #include "Fuzzer/FuzzerInternal.h"
 #include "Fuzzer/FuzzerCorpus.h"
 #include "Fuzzer/FuzzerExtFunctions.h"
-
-#include "protobuf_mutator/protobuf.h"
 #include "protobuf_mutator/mutator.h"
-#include "protobuf_mutator/proto_util.h"
 
 // Defines custom mutator, crossover and test functions using default serialization format. Default is text.
 #define DEFINE_AFL_PROTO_FUZZER(args...) DEFINE_AFL_BINARY_PROTO_FUZZER(args)

@@ -78,10 +78,10 @@ CTestTestfile.cmake
 *.pb.h
 
 # afl++
-afl_test/in/
 afl_test/out/
 *.gcda
 *.gcno
 test
 *.txt
 !CMakeLists.txt
+!afl_test/Makefile

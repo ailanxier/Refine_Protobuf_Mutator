@@ -38,7 +38,7 @@ namespace protobuf_mutator{
             // std::ofstream random_of("random.txt", std::ios::out | std::ios::app);
             // random_of << now << std::endl;
             // random_of.close();
-            if(now <= 2){
+            if(now <= 6){
                 memcpy(m->ReallocBuf(std::max(max_size, buf_size)), buf, buf_size);
                 m->SetLen(CustomProtoMutator(binary, m->GetOutBuf(), buf_size, max_size, m->GetSeed(), input1));
             }else{

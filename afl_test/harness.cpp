@@ -1,8 +1,7 @@
 #include <string>
 #include <stdlib.h>
-#include "../build/fhe_protobuf/fhe.pb.h"
+#include "../src/proto/fhe.pb.h"
 
-// #include <libprotobuf-mutator/src/libfuzzer/libfuzzer_macro.h>
 using namespace std;
 int main(int argc, char *argv[]) {
   string str;

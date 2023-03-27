@@ -4,8 +4,6 @@
 #include <memory>
 #include <string>
 
-#include "protobuf.h"
-
 namespace protobuf_mutator {
 
 // Helper class for common protobuf fields operations.

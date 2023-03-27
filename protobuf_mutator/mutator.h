@@ -3,16 +3,22 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
 #include <functional>
 #include <memory>
 #include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "protobuf.h"
-#include "random.h"
+#include <algorithm>
+#include <bitset>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+#include "proto_util.h"
+#include "field_instance.h"
 
 namespace protobuf_mutator {
 
