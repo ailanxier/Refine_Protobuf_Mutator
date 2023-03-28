@@ -1,5 +1,5 @@
 #include "fhe_protobuf_mutator.h"
-#include <fstream>
+
 namespace fhe_protobuf_mutator {
     namespace {
         TestMessageHandler* GetMessageHandler(){

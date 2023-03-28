@@ -5,6 +5,14 @@
 #include <string>
 
 namespace protobuf_mutator {
+  using protobuf::Message;
+  using protobuf::Descriptor;
+  using protobuf::FieldDescriptor;
+  using protobuf::FileDescriptor;
+  using protobuf::OneofDescriptor;
+  using protobuf::Reflection;
+  using protobuf::EnumDescriptor;
+  using protobuf::EnumValueDescriptor;
 
 // Helper class for common protobuf fields operations.
 class ConstFieldInstance {
@@ -18,7 +26,7 @@ class ConstFieldInstance {
 
   ConstFieldInstance(): message_(nullptr), descriptor_(nullptr), index_(kInvalidIndex) {}
 
-  ConstFieldInstance(const protobuf::Message* message, const protobuf::FieldDescriptor* field, size_t index)
+  ConstFieldInstance(const Message* message, const FieldDescriptor* field, size_t index)
       : message_(message), descriptor_(field), index_(index) {
     assert(message_);
     assert(descriptor_);
@@ -26,7 +34,7 @@ class ConstFieldInstance {
     assert(descriptor_->is_repeated());
   }
 
-  ConstFieldInstance(const protobuf::Message* message, const protobuf::FieldDescriptor* field)
+  ConstFieldInstance(const Message* message, const FieldDescriptor* field)
       : message_(message), descriptor_(field), index_(kInvalidIndex) {
     assert(message_);
     assert(descriptor_);
@@ -48,14 +56,12 @@ class ConstFieldInstance {
   void GetDefault(bool* out) const { *out = descriptor_->default_value_bool(); }
 
   void GetDefault(Enum* out) const {
-    const protobuf::EnumValueDescriptor* value = descriptor_->default_value_enum();
-    const protobuf::EnumDescriptor* type = value->type();
+    const EnumValueDescriptor* value = descriptor_->default_value_enum();
+    const EnumDescriptor* type = value->type();
     *out = {static_cast<size_t>(value->index()), static_cast<size_t>(type->value_count())};
   }
 
-  void GetDefault(std::string* out) const {*out = descriptor_->default_value_string();}
-
-  void GetDefault(std::unique_ptr<protobuf::Message>* out) const {
+  void GetDefault(std::unique_ptr<Message>* out) const {
     out->reset(reflection().GetMessageFactory()->GetPrototype(descriptor_->message_type())->New());
   }
 
@@ -96,7 +102,7 @@ class ConstFieldInstance {
   }
 
   void Load(Enum* value) const {
-    const protobuf::EnumValueDescriptor* value_descriptor = is_repeated()
+    const EnumValueDescriptor* value_descriptor = is_repeated()
             ? reflection().GetRepeatedEnum(*message_, descriptor_, index_)
             : reflection().GetEnum(*message_, descriptor_);
     *value = {static_cast<size_t>(value_descriptor->index()),
@@ -104,42 +110,23 @@ class ConstFieldInstance {
     if (value->index >= value->count) GetDefault(value);
   }
 
-  void Load(std::string* value) const {
-    *value = is_repeated() ? reflection().GetRepeatedString(*message_, descriptor_, index_)
-                           : reflection().GetString(*message_, descriptor_);
-  }
-
-  void Load(std::unique_ptr<protobuf::Message>* value) const {
-    const protobuf::Message& source = is_repeated()
+  void Load(std::unique_ptr<Message>* value) const {
+    const Message& source = is_repeated()
             ? reflection().GetRepeatedMessage(*message_, descriptor_, index_)
             : reflection().GetMessage(*message_, descriptor_);
     value->reset(source.New());
     (*value)->CopyFrom(source);
   }
 
-  template <class T>
-  bool CanStore(const T& value) const {return true;}
-
-  bool CanStore(const std::string& value) const {
-    if (!EnforceUtf8()) return true;
-    using protobuf::internal::WireFormatLite;
-    return WireFormatLite::VerifyUtf8String(value.data(), value.length(), WireFormatLite::PARSE, "");
-  }
-
   std::string name() const { return descriptor_->name(); }
 
-  protobuf::FieldDescriptor::CppType cpp_type() const {return descriptor_->cpp_type();}
+  FieldDescriptor::CppType cpp_type() const {return descriptor_->cpp_type();}
 
-  const protobuf::EnumDescriptor* enum_type() const {return descriptor_->enum_type();}
+  const EnumDescriptor* enum_type() const {return descriptor_->enum_type();}
 
-  const protobuf::Descriptor* message_type() const {return descriptor_->message_type();}
+  const Descriptor* message_type() const {return descriptor_->message_type();}
 
-  bool EnforceUtf8() const {
-    return descriptor_->type() == protobuf::FieldDescriptor::TYPE_STRING &&
-           descriptor()->file()->syntax() == protobuf::FileDescriptor::SYNTAX_PROTO3;
-  }
-
-  const protobuf::FieldDescriptor* descriptor() const { return descriptor_; }
+  const FieldDescriptor* descriptor() const { return descriptor_; }
 
   std::string DebugString() const {
     std::string s = descriptor_->DebugString();
@@ -150,7 +137,7 @@ class ConstFieldInstance {
  protected:
   bool is_repeated() const { return descriptor_->is_repeated(); }
 
-  const protobuf::Reflection& reflection() const { return *message_->GetReflection(); }
+  const Reflection& reflection() const { return *message_->GetReflection(); }
 
   size_t index() const { return index_; }
 
@@ -158,8 +145,8 @@ class ConstFieldInstance {
   template <class Fn, class T>
   friend struct FieldFunction;
 
-  const protobuf::Message* message_;
-  const protobuf::FieldDescriptor* descriptor_;
+  const Message* message_;
+  const FieldDescriptor* descriptor_;
   size_t index_;
 };
 
@@ -169,10 +156,10 @@ class FieldInstance : public ConstFieldInstance {
 
   FieldInstance() : ConstFieldInstance(), message_(nullptr) {}
 
-  FieldInstance(protobuf::Message* message, const protobuf::FieldDescriptor* field, size_t index)
+  FieldInstance(Message* message, const FieldDescriptor* field, size_t index)
       : ConstFieldInstance(message, field, index), message_(message) {}
 
-  FieldInstance(protobuf::Message* message, const protobuf::FieldDescriptor* field)
+  FieldInstance(Message* message, const FieldDescriptor* field)
       : ConstFieldInstance(message, field), message_(message) {}
 
   void Delete() const {
@@ -241,7 +228,7 @@ class FieldInstance : public ConstFieldInstance {
 
   void Store(const Enum& value) const {
     assert(value.index < value.count);
-    const protobuf::EnumValueDescriptor* enum_value =
+    const EnumValueDescriptor* enum_value =
         descriptor()->enum_type()->value(value.index);
     if (is_repeated())
       reflection().SetRepeatedEnum(message_, descriptor(), index(), enum_value);
@@ -249,15 +236,8 @@ class FieldInstance : public ConstFieldInstance {
       reflection().SetEnum(message_, descriptor(), enum_value);
   }
 
-  void Store(const std::string& value) const {
-    if (is_repeated())
-      reflection().SetRepeatedString(message_, descriptor(), index(), value);
-    else
-      reflection().SetString(message_, descriptor(), value);
-  }
-
-  void Store(const std::unique_ptr<protobuf::Message>& value) const {
-    protobuf::Message* mutable_message = is_repeated() 
+  void Store(const std::unique_ptr<Message>& value) const {
+    Message* mutable_message = is_repeated() 
                       ? reflection().MutableRepeatedMessage(message_, descriptor(), index())
                       : reflection().MutableMessage(message_, descriptor());
     mutable_message->Clear();
@@ -265,6 +245,8 @@ class FieldInstance : public ConstFieldInstance {
   }
 
  private:
+  Message* message_;
+
   template <class T>
   void InsertRepeated(const T& value) const {
     PushBackRepeated(value);
@@ -313,24 +295,18 @@ class FieldInstance : public ConstFieldInstance {
 
   void PushBackRepeated(const Enum& value) const {
     assert(value.index < value.count);
-    const protobuf::EnumValueDescriptor* enum_value = descriptor()->enum_type()->value(value.index);
+    const EnumValueDescriptor* enum_value = descriptor()->enum_type()->value(value.index);
     assert(is_repeated());
     reflection().AddEnum(message_, descriptor(), enum_value);
   }
 
-  void PushBackRepeated(const std::string& value) const {
+  void PushBackRepeated(const std::unique_ptr<Message>& value) const {
     assert(is_repeated());
-    reflection().AddString(message_, descriptor(), value);
-  }
-
-  void PushBackRepeated(const std::unique_ptr<protobuf::Message>& value) const {
-    assert(is_repeated());
-    protobuf::Message* mutable_message = reflection().AddMessage(message_, descriptor());
+    Message* mutable_message = reflection().AddMessage(message_, descriptor());
     mutable_message->Clear();
     if (value) mutable_message->CopyFrom(*value);
   }
 
-  protobuf::Message* message_;
 };
 
 template <class Fn, class R = void>
@@ -338,7 +314,6 @@ struct FieldFunction {
   template <class Field, class... Args>
   R operator()(const Field& field, const Args&... args) const {
     assert(field.descriptor());
-    using protobuf::FieldDescriptor;
     switch (field.cpp_type()) {
       case FieldDescriptor::CPPTYPE_INT32:
         return static_cast<const Fn*>(this)->template ForType<int32_t>(field, args...);
@@ -356,10 +331,11 @@ struct FieldFunction {
         return static_cast<const Fn*>(this)->template ForType<bool>(field, args...);
       case FieldDescriptor::CPPTYPE_ENUM:
         return static_cast<const Fn*>(this)->template ForType<ConstFieldInstance::Enum>(field, args...);
-      case FieldDescriptor::CPPTYPE_STRING:
-        return static_cast<const Fn*>(this)->template ForType<std::string>(field, args...);
+      // do not support string
+      case FieldDescriptor::CPPTYPE_STRING:  
+        break;
       case FieldDescriptor::CPPTYPE_MESSAGE:
-        return static_cast<const Fn*>(this)->template ForType<std::unique_ptr<protobuf::Message>>(field, args...);
+        return static_cast<const Fn*>(this)->template ForType<std::unique_ptr<Message>>(field, args...);
     }
     assert(false && "Unknown type");
     abort();

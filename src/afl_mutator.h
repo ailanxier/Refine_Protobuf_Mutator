@@ -1,13 +1,8 @@
 #ifndef AFLPLUSPLUS_PROTOBUF_MUTATOR_SRC_AFL_MUTATE_H_
 #define AFLPLUSPLUS_PROTOBUF_MUTATOR_SRC_AFL_MUTATE_H_
 
-#include <stddef.h>
-
 #include <iostream>
 #include <fstream>
-#include <cstdint>
-#include <functional>
-#include <type_traits>
 
 #include "Fuzzer/FuzzerDefs.h"
 #include "Fuzzer/FuzzerRandom.h"
@@ -94,9 +89,7 @@ namespace protobuf_mutator{
     //Implementation of Crossover and Mutation of test cases in A(FL)_CustomProtoMutator.
     size_t AFL_CustomProtoMutator(MutateHelper *m, bool binary, unsigned char *buf, size_t buf_size, 
                                 unsigned char **out_buf, unsigned char *add_buf, 
-                                size_t add_buf_size, size_t max_size, 
-                                protobuf::Message* input1,
-                                protobuf::Message* input2);
+                                size_t add_buf_size, size_t max_size, Message* input1, Message* input2);
 
   } // namespace aflplusplus
 } // namespace protobuf_mutator

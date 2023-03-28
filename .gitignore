@@ -23,6 +23,8 @@ fabric.properties
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.VSCodeCounter/
+out/
 
 # C++ ================================
  Prerequisites

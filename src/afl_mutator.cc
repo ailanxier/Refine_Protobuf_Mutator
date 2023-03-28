@@ -1,6 +1,4 @@
 #include "afl_mutator.h"
-#include <random>
-#include <algorithm>
 
 #define INITIAL_SIZE (100)
 #define MAX(x, y) ( ((x) > (y)) ? (x) : y )
@@ -30,8 +28,7 @@ namespace protobuf_mutator{
 
         size_t AFL_CustomProtoMutator(MutateHelper *m, bool binary, unsigned char *buf, size_t buf_size, 
                                     unsigned char **out_buf, unsigned char *add_buf, 
-                                    size_t add_buf_size, size_t max_size, 
-                                    protobuf::Message* input1, protobuf::Message* input2) {                   
+                                    size_t add_buf_size, size_t max_size, Message* input1, Message* input2) {                   
             // (PC) probability of crossover : 0.8 (0.6~1.0)
             // (PM) probability of mutation  : 0.2 
             size_t now = GetRandom(m->GetSeed());
