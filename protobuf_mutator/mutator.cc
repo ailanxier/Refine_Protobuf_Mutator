@@ -5,8 +5,7 @@ namespace protobuf_mutator {
 
 namespace {
 
-  const int kMaxInitializeDepth = 200;
-  const uint64_t kDefaultMutateWeight = 1000000;
+  const uint64_t kDefaultMutateWeight = 1;
 
   enum class Mutation : uint8_t {
     None,
@@ -19,8 +18,8 @@ namespace {
   };
 
   using MutationBitset = std::bitset<static_cast<size_t>(Mutation::Last) + 1>;
-  using Messages = std::vector<Message*>;
-  using ConstMessages = std::vector<const Message*>;
+  using messageVec = std::vector<Message*>;
+  using ConstMessageVec = std::vector<const Message*>;
 
   // Return random integer from [0, count)
   size_t GetRandomIndex(RandomEngine* random, size_t count) {
@@ -287,7 +286,7 @@ namespace {
 
   class FieldMutator {
   public:
-    FieldMutator(int size_increase_hint, bool enforce_changes, const ConstMessages& sources, Mutator* mutator)
+    FieldMutator(int size_increase_hint, bool enforce_changes, const ConstMessageVec& sources, Mutator* mutator)
     : size_increase_hint_(size_increase_hint), enforce_changes_(enforce_changes), sources_(sources), mutator_(mutator) {}
 
     void Mutate(int32_t* value) const { RepeatMutate(value, std::bind(&Mutator::MutateInt32, mutator_, _1)); }
@@ -312,7 +311,7 @@ namespace {
   private:
     int size_increase_hint_;
     size_t enforce_changes_;
-    const ConstMessages& sources_;
+    const ConstMessageVec& sources_;
     Mutator* mutator_;
     
     template <class T, class F>
@@ -332,7 +331,7 @@ namespace {
   struct MutateField : public FieldFunction<MutateField> {
     template <class T>
     void ForType(const FieldInstance& field, int size_increase_hint,
-                const ConstMessages& sources, Mutator* mutator) const {
+                const ConstMessageVec& sources, Mutator* mutator) const {
       T value;
       field.Load(&value);
       FieldMutator(size_increase_hint, true, sources, mutator).Mutate(&value);
@@ -344,7 +343,7 @@ namespace {
   public:
     template <class T>
     void ForType(const FieldInstance& field, int size_increase_hint,
-                const ConstMessages& sources, Mutator* mutator) const {
+                const ConstMessageVec& sources, Mutator* mutator) const {
       T value;
       field.GetDefault(&value);
       /* defaults could be useful */
@@ -359,25 +358,25 @@ namespace {
   void Mutator::Seed(uint32_t value) { random_.seed(value); }
 
   void Mutator::Mutate(Message* message, size_t max_size_hint) { 
-    Messages messages;
+    messageVec messages;
     messages.push_back(message);
 
-    ConstMessages sources(messages.begin(), messages.end());
+    ConstMessageVec sources(messages.begin(), messages.end());
     MutateImpl(sources, messages, false, static_cast<int>(max_size_hint) - static_cast<int>(message->ByteSizeLong()));
   }
 
   void Mutator::CrossOver(const Message& message1, Message* message2, size_t max_size_hint) {
-    Messages messages;
+    messageVec messages;
     messages.push_back(message2);
 
-    ConstMessages sources;
+    ConstMessageVec sources;
     sources.push_back(&message1);
     sources.push_back(message2);
 
     MutateImpl(sources, messages, true, static_cast<int>(max_size_hint) - static_cast<int>(message2->ByteSizeLong()));
   }
 
-  bool Mutator::MutateImpl(const ConstMessages& sources, const Messages& messages,
+  bool Mutator::MutateImpl(const ConstMessageVec& sources, const messageVec& messages,
                           bool copy_clone_only, int size_increase_hint) {
     MutationBitset mutations;
     if (copy_clone_only) {

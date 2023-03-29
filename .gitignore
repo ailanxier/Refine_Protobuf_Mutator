@@ -83,7 +83,7 @@ CTestTestfile.cmake
 afl_test/out/
 *.gcda
 *.gcno
-test
+vuln
 *.txt
 !CMakeLists.txt
 !afl_test/Makefile

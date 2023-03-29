@@ -29,7 +29,6 @@ namespace protobuf_mutator {
     void CrossOver(const Message& message1, Message* message2, size_t max_size_hint);
 
   protected:
-    // TODO(vitalybuka): Consider to replace with single mutate (uint8_t*, size).
     virtual int32_t MutateInt32(int32_t value);
     virtual int64_t MutateInt64(int64_t value);
     virtual uint32_t MutateUInt32(uint32_t value);

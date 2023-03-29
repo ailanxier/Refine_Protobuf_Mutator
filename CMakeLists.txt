@@ -5,10 +5,11 @@ enable_language(C)
 enable_language(CXX)
 
 # set c++ version
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_C_COMPILER "/usr/bin/clang")
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # External dependencies
 include(CheckCCompilerFlag)
@@ -55,6 +56,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # endif(libprotobuf-mutator_FOUND)
 add_subdirectory(protobuf_mutator)
 add_subdirectory(src)
+add_subdirectory(test)
 # add_subdirectory(afl_test)
 link_libraries(protobuf)
 

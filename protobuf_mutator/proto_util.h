@@ -30,7 +30,7 @@ namespace protobuf_mutator {
   using protobuf::Reflection;
   using protobuf::util::MessageDifferencer;
   using RandomEngine = std::minstd_rand;
-  size_t CustomProtoMutator(bool binary, uint8_t* data, size_t size, size_t max_size, unsigned int seed, Message* input);
+  size_t CustomProtoMutate(bool binary, uint8_t* data, size_t size, size_t max_size, unsigned int seed, Message* input);
   size_t CustomProtoCrossOver(bool binary, const uint8_t* data1, size_t size1, const uint8_t* data2, 
         size_t size2, uint8_t* out, size_t max_out_size, unsigned int seed, Message* input1, Message* input2);
 
@@ -47,33 +47,33 @@ namespace protobuf_mutator {
   String SaveMessageAsBinary(const Message& message);
 
   class InputReader {
-  public:
-    InputReader(const uint8_t* data, size_t size) : data_(data), size_(size) {}
-    virtual ~InputReader() = default;
+    public:
+      InputReader(const uint8_t* data, size_t size) : data_(data), size_(size) {}
+      virtual ~InputReader() = default;
 
-    virtual bool Read(Message* message) const = 0;
+      virtual bool Read(Message* message) const = 0;
 
-    const uint8_t* data() const { return data_; }
-    size_t size() const { return size_; }
+      const uint8_t* data() const { return data_; }
+      size_t size() const { return size_; }
 
-  private:
-    const uint8_t* data_;
-    size_t size_;
+    private:
+      const uint8_t* data_;
+      size_t size_;
   };
 
   class OutputWriter {
-  public:
-    OutputWriter(uint8_t* data, size_t size) : data_(data), size_(size) {}
-    virtual ~OutputWriter() = default;
+    public:
+      OutputWriter(uint8_t* data, size_t size) : data_(data), size_(size) {}
+      virtual ~OutputWriter() = default;
 
-    virtual size_t Write(const Message& message) = 0;
+      virtual size_t Write(const Message& message) = 0;
 
-    uint8_t* data() const { return data_; }
-    size_t size() const { return size_; }
+      uint8_t* data() const { return data_; }
+      size_t size() const { return size_; }
 
-  private:
-    uint8_t* data_;
-    size_t size_;
+    private:
+      uint8_t* data_;
+      size_t size_;
   };
 
   class TextInputReader : public InputReader {
@@ -83,21 +83,21 @@ namespace protobuf_mutator {
   };
 
   class TextOutputWriter : public OutputWriter {
-  public:
-    using OutputWriter::OutputWriter;
-    size_t Write(const Message& message) override { return SaveMessageAsText(message, data(), size()); }
+    public:
+      using OutputWriter::OutputWriter;
+      size_t Write(const Message& message) override { return SaveMessageAsText(message, data(), size()); }
   };
 
   class BinaryInputReader : public InputReader {
-  public:
-    using InputReader::InputReader;
-    bool Read(Message* message) const override { return ParseBinaryMessage(data(), size(), message); }
+    public:
+      using InputReader::InputReader;
+      bool Read(Message* message) const override { return ParseBinaryMessage(data(), size(), message); }
   };
 
   class BinaryOutputWriter : public OutputWriter {
-  public:
-    using OutputWriter::OutputWriter;
-    size_t Write(const Message& message) override { return SaveMessageAsBinary(message, data(), size()); }
+    public:
+      using OutputWriter::OutputWriter;
+      size_t Write(const Message& message) override { return SaveMessageAsBinary(message, data(), size()); }
   };
 
   class LastMutationCache {

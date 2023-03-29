@@ -48,7 +48,7 @@ namespace fhe_protobuf_mutator {
     }
 
     // transfer Protobuf input to some interesting DATA and output the DATA to *out_buf
-    DEFINE_AFL_PROTO_FUZZER(const Root& input, unsigned char **out_buf){
+    DEFINE_AFL_PROTO_FUZZER(const Root& input, unsigned char **out_buf, int index){
       /**
         * @param[in]  input    Protobuf Buffer containing the test case
         * @param[out] out_buf  Pointer to the buffer containing the test case after tranferance. 

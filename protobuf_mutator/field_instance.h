@@ -228,8 +228,7 @@ class FieldInstance : public ConstFieldInstance {
 
   void Store(const Enum& value) const {
     assert(value.index < value.count);
-    const EnumValueDescriptor* enum_value =
-        descriptor()->enum_type()->value(value.index);
+    const EnumValueDescriptor* enum_value = descriptor()->enum_type()->value(value.index);
     if (is_repeated())
       reflection().SetRepeatedEnum(message_, descriptor(), index(), enum_value);
     else
