@@ -13,18 +13,11 @@ namespace protobuf_mutator {
     return &mutator;
   }
 
-  size_t GetMaxSize(const InputReader& input, const OutputWriter& output, const Message& message) {
-    size_t max_size = message.ByteSizeLong() + output.size();
-    max_size -= std::min(max_size, input.size());
-    return max_size;
-    return output.size();
-  }
 
   size_t MutateMessage(unsigned int seed, const InputReader& input, OutputWriter* output, Message* message) {
     GetMutator()->Seed(seed);
     input.Read(message);
-    size_t max_size = GetMaxSize(input, *output, *message);
-    GetMutator()->Mutate(message, max_size);
+    GetMutator()->Mutate(message, output->size());
     if (size_t new_size = output->Write(*message)) {
       assert(new_size <= output->size());
       GetCache()->Store(output->data(), new_size, message);
@@ -38,8 +31,7 @@ namespace protobuf_mutator {
     GetMutator()->Seed(seed);
     input1.Read(message1);
     input2.Read(message2);
-    size_t max_size = GetMaxSize(input1, *output, *message1);
-    GetMutator()->CrossOver(*message2, message1, max_size);
+    GetMutator()->CrossOver(*message2, message1, output->size());
     if (size_t new_size = output->Write(*message1)) {
       assert(new_size <= output->size());
       GetCache()->Store(output->data(), new_size, message1);
@@ -84,7 +76,7 @@ namespace protobuf_mutator {
   }
 
 
-  bool ParseBinaryMessage(const String& data, Message* output) {
+  bool ParseBinaryMessage(const string& data, Message* output) {
     output->Clear();
     if (!output->ParsePartialFromString(data)) {
       output->Clear();
@@ -97,14 +89,14 @@ namespace protobuf_mutator {
     return ParseBinaryMessage({reinterpret_cast<const char*>(data), size}, output);
   }
 
-  String SaveMessageAsBinary(const Message& message) {
-    String tmp;
+  string SaveMessageAsBinary(const Message& message) {
+    string tmp;
     if (!message.SerializePartialToString(&tmp)) return {};
     return tmp;
   }
 
   size_t SaveMessageAsBinary(const Message& message, uint8_t* data, size_t max_size) {
-    String result = SaveMessageAsBinary(message);
+    string result = SaveMessageAsBinary(message);
     if (result.size() <= max_size) {
       memcpy(data, result.data(), result.size());
       return result.size();
@@ -112,7 +104,7 @@ namespace protobuf_mutator {
     return 0;
   }
 
-  bool ParseTextMessage(const String& data, Message* output) {
+  bool ParseTextMessage(const string& data, Message* output) {
     output->Clear();
     TextFormat::Parser parser;
     parser.SetRecursionLimit(100);
@@ -129,18 +121,19 @@ namespace protobuf_mutator {
     return ParseTextMessage({reinterpret_cast<const char*>(data), size}, output);
   }
 
-  String SaveMessageAsText(const Message& message) {
-    String tmp;
+  string SaveMessageAsText(const Message& message) {
+    string tmp;
     if (!TextFormat::PrintToString(message, &tmp)) return {};
     return tmp;
   }
 
   size_t SaveMessageAsText(const Message& message, uint8_t* data, size_t max_size) {
-    String result = SaveMessageAsText(message);
+    string result = SaveMessageAsText(message);
     if (result.size() <= max_size) {
       memcpy(data, result.data(), result.size());
       return result.size();
     }
     return 0;
   }
+
 }  // namespace protobuf_mutator

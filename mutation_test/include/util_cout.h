@@ -7,9 +7,9 @@
 #include "general_setting.h"
 #include "util_string.h"
 
-#define COUT_RED "\033[31m"
-#define COUT_GREEN "\033[32m"
-#define COUT_END_COLOR "\033[0m"
+string COUT_RED = "\033[31m";
+string COUT_GREEN = "\033[32m";
+string COUT_END_COLOR = "\033[0m";
 #define __output(...) \
     printf(__VA_ARGS__);
  
@@ -48,7 +48,7 @@ inline void print_one_star_line(int star_num = 50){
  * @param segment_flag  print one line of '*' after this line by default (= true).
  *      A `bool` to determine whether to print '*'.
  **/
-inline void print_words(std::initializer_list<std::string> words, int highlight_pos = 0, bool segment_flag = true){
+inline void print_words(const vector<string>& words, int highlight_pos = 0, bool segment_flag = true){
     #ifdef DEBUG
         if(highlight_pos > (int)words.size()){
             cout << COUT_RED << "cout warning: highlight_pos is out of bounds" 

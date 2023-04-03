@@ -18,37 +18,17 @@ namespace fhe_protobuf_mutator {
         of.close();
     }
 
-    size_t TestMessageHandler::TransferMessageType(const Root& input, unsigned char **out_buf){
-        of << input.test() << " " << input.lt() << std::endl;
+    size_t TestMessageHandler::TransferMessageType(const TestRootMsg& input, unsigned char **out_buf){
+        of << input.param().num32() << " " << input.param().num64() << std::endl;
         std::string buffer;
         input.SerializePartialToString(&buffer);
         strcpy(temp, buffer.c_str());
         *out_buf = (unsigned char *)temp;
         return buffer.size();
-        // if(input.test() == 123 || input.test() == 0 || input.test() == 1 || input.test() == 1073741824){
-        //     Root now = input;
-        //     now.set_test(107374182);
-            
-        //     std::string buffer;
-        //     now.SerializeToString(&buffer);
-        //     strcpy(temp, buffer.c_str());
-        //     *out_buf = (unsigned char *)temp;
-        //     // google::protobuf::TextFormat::PrintToString(now, &buffer);
-        //     // of << buffer <<std::endl;
-        //     return buffer.size();
-        // }else{
-        //     Root now = input;
-        //     now.set_test(4444);
-        //     std::string buffer;
-        //     now.SerializeToString(&buffer);
-        //     strcpy(temp, buffer.c_str());
-        //     *out_buf = (unsigned char *)temp;
-        //     return buffer.size();
-        // }
     }
 
     // transfer Protobuf input to some interesting DATA and output the DATA to *out_buf
-    DEFINE_AFL_PROTO_FUZZER(const Root& input, unsigned char **out_buf, int index){
+    DEFINE_AFL_PROTO_FUZZER(const TestRootMsg& input, unsigned char **out_buf, int index){
       /**
         * @param[in]  input    Protobuf Buffer containing the test case
         * @param[out] out_buf  Pointer to the buffer containing the test case after tranferance. 

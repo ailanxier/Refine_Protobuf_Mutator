@@ -21,16 +21,34 @@ inline void print_words(const vector<string> words, int highlight_pos = 0){
     }
     cout << endl;
 }
+
 int main(int argc ,char**argv){
     TestRootMsg msg;
     int i = 0;
-    for(int i = 0;i < SeedNum;i++){
+    // for(int i = 0;i < SeedNum;i++){
         auto param = msg.mutable_param();
         auto evalData = msg.mutable_evaldata();
         auto apiSeq = msg.mutable_apisequence();
-        param->set_num32(num32[i]);
-        param->set_num64(num64[i]);
-        param->set_secretkeydist(skd[i]);
+        // auto test = apiSeq->GetDescriptor()->field(0);
+        // print_words({test->name(), to_string(test->number()), to_string(test->type())}, 3);
+        // auto ref = apiSeq->GetReflection();
+        // auto tm = ref->MutableMessage(apiSeq, test);
+        // auto tref = tm->GetReflection();
+        // auto tdesc = tm->GetDescriptor();
+        // auto oneof = tdesc->field(0)->containing_oneof();
+        // if(oneof){
+        //     FieldDescriptor* last = nullptr;
+        //     for(int i = 0;i < oneof->field_count();i++){
+        //         auto field = tdesc->field(i);
+        //         print_words({field->name(), to_string(field->number()), to_string(field->cpp_type())}, 3);
+        //         tref->SetAllocatedMessage(tm, tref->MutableMessage(tm, field)->New(), field);
+        //         if(last)
+        //         cout<<last->name()<<" "<<tref->HasField(*tm, last)<<endl;
+        //         last = const_cast<FieldDescriptor*>(field);
+        //     }
+        // }
+        
+        
         
         EvalData::OneDataList oneDataList;
         for(auto & dataList : allData[i]){
@@ -78,12 +96,14 @@ int main(int argc ,char**argv){
                 oneAPI.set_dst(sp->dst);
                 apiSeq->add_apilist()->CopyFrom(oneAPI);
             }
+            // cout<<it->dst<<endl;
         }
-        print_words({"==============", to_string(i), "=============="}, 2);
+        // print_words({"==============", to_string(i), "=============="}, 2);
         ofstream OutFile(to_string(i)+".txt", ios::out); 
         msg.SerializePartialToOstream(&OutFile);
-        msg.PrintDebugString();
+        // msg.PrintDebugString();
         msg.Clear();
-    }
+    // }
+    
     return 0;
 }

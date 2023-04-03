@@ -56,7 +56,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # endif(libprotobuf-mutator_FOUND)
 add_subdirectory(protobuf_mutator)
 add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory(mutation_test)
 # add_subdirectory(afl_test)
 link_libraries(protobuf)
 

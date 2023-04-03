@@ -9,7 +9,7 @@ namespace fhe_protobuf_mutator {
         public:
             TestMessageHandler();
             ~TestMessageHandler();
-            size_t TransferMessageType(const Root& input, unsigned char **out_buf);
+            size_t TransferMessageType(const TestRootMsg& input, unsigned char **out_buf);
             std::ofstream of;
             char *temp;
     };

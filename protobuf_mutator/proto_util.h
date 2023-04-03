@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-
+#include <bitset>
 #include "google/protobuf/any.pb.h"
 #include "google/protobuf/descriptor.pb.h"
 #include "google/protobuf/message.h"
@@ -20,7 +20,9 @@
 
 namespace protobuf_mutator {
   namespace protobuf = google::protobuf;
-  using String = std::string;
+  using std::string;
+  using std::vector;
+  using std::bitset;
   using protobuf::Message;
   using protobuf::Descriptor;
   using protobuf::TextFormat;
@@ -38,13 +40,13 @@ namespace protobuf_mutator {
   bool LoadProtoInput(bool binary, const uint8_t* data, size_t size, Message* input);
   
   bool ParseTextMessage(const uint8_t* data, size_t size, Message* output);
-  bool ParseTextMessage(const String& data, Message* output);
+  bool ParseTextMessage(const string& data, Message* output);
   size_t SaveMessageAsText(const Message& message, uint8_t* data, size_t max_size);
-  String SaveMessageAsText(const Message& message);
+  string SaveMessageAsText(const Message& message);
   bool ParseBinaryMessage(const uint8_t* data, size_t size, Message* output);
-  bool ParseBinaryMessage(const String& data, Message* output);
+  bool ParseBinaryMessage(const string& data, Message* output);
   size_t SaveMessageAsBinary(const Message& message, uint8_t* data, size_t max_size);
-  String SaveMessageAsBinary(const Message& message);
+  string SaveMessageAsBinary(const Message& message);
 
   class InputReader {
     public:
@@ -155,4 +157,10 @@ namespace protobuf_mutator {
   };
 }  // namespace protobuf_mutator
 
+//  size_t GetMaxSize(const InputReader& input, const OutputWriter& output, const Message& message) {
+//   size_t max_size = message.ByteSizeLong() + output.size();
+//   max_size -= std::min(max_size, input.size());
+//   return max_size;
+//   return output.size();
+// }
 #endif  // SRC_LIBFUZZER_LIBFUZZER_MACRO_H_
