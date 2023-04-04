@@ -2,8 +2,8 @@ syntax = "proto3";
 
 message TestRootMsg {
     Param param = 1;
-    EvalData evalData = 2;
-    APISequence apiSequence = 3;
+    EData evalData = 2;
+    APISeq apiSequence = 3;
 }
 
 message Param {
@@ -17,7 +17,7 @@ message Param {
     optional SecretKeyDist secretKeyDist = 3;
 }
 
-message EvalData {
+message EData {
     message OneDataList {
         repeated double dataList = 1;
     }
@@ -25,7 +25,7 @@ message EvalData {
     repeated OneDataList allDataLists = 2;
 }
 
-message APISequence {
+message APISeq {
     message OneAPI {
         message AddTwoList {
             uint32 src1 = 1;

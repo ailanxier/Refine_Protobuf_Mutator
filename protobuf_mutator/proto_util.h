@@ -18,143 +18,111 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "google/protobuf/wire_format.h"
 
+
 namespace protobuf_mutator {
-  namespace protobuf = google::protobuf;
-  using std::string;
-  using std::vector;
-  using std::bitset;
-  using protobuf::Message;
-  using protobuf::Descriptor;
-  using protobuf::TextFormat;
-  using protobuf::FieldDescriptor;
-  using protobuf::FileDescriptor;
-  using protobuf::OneofDescriptor;
-  using protobuf::Reflection;
-  using protobuf::util::MessageDifferencer;
-  using RandomEngine = std::minstd_rand;
-  size_t CustomProtoMutate(bool binary, uint8_t* data, size_t size, size_t max_size, unsigned int seed, Message* input);
-  size_t CustomProtoCrossOver(bool binary, const uint8_t* data1, size_t size1, const uint8_t* data2, 
-        size_t size2, uint8_t* out, size_t max_out_size, unsigned int seed, Message* input1, Message* input2);
+    namespace protobuf = google::protobuf;
+    using std::string;
+    using std::vector;
+    using std::bitset;
+    using protobuf::Message;
+    using protobuf::Descriptor;
+    using protobuf::TextFormat;
+    using protobuf::FieldDescriptor;
+    using protobuf::FileDescriptor;
+    using protobuf::OneofDescriptor;
+    using protobuf::Reflection;
+    using protobuf::util::MessageDifferencer;
+    size_t CustomProtoMutate(bool binary, uint8_t* data, size_t size, size_t max_size, unsigned int seed, Message* input);
+    size_t CustomProtoCrossOver(bool binary, const uint8_t* data1, size_t size1, const uint8_t* data2, 
+            size_t size2, uint8_t* out, size_t max_out_size, unsigned int seed, Message* input1, Message* input2);
 
-  // data -> input
-  bool LoadProtoInput(bool binary, const uint8_t* data, size_t size, Message* input);
-  
-  bool ParseTextMessage(const uint8_t* data, size_t size, Message* output);
-  bool ParseTextMessage(const string& data, Message* output);
-  size_t SaveMessageAsText(const Message& message, uint8_t* data, size_t max_size);
-  string SaveMessageAsText(const Message& message);
-  bool ParseBinaryMessage(const uint8_t* data, size_t size, Message* output);
-  bool ParseBinaryMessage(const string& data, Message* output);
-  size_t SaveMessageAsBinary(const Message& message, uint8_t* data, size_t max_size);
-  string SaveMessageAsBinary(const Message& message);
+    // data -> input
+    bool LoadProtoInput(bool binary, const uint8_t* data, size_t size, Message* input);
+    
+    bool ParseTextMessage(const uint8_t* data, size_t size, Message* output);
+    bool ParseTextMessage(const string& data, Message* output);
+    size_t SaveMessageAsText(const Message& message, uint8_t* data, size_t max_size);
+    string SaveMessageAsText(const Message& message);
+    bool ParseBinaryMessage(const uint8_t* data, size_t size, Message* output);
+    bool ParseBinaryMessage(const string& data, Message* output);
+    size_t SaveMessageAsBinary(const Message& message, uint8_t* data, size_t max_size);
+    string SaveMessageAsBinary(const Message& message);
 
-  class InputReader {
+    class InputReader {
     public:
-      InputReader(const uint8_t* data, size_t size) : data_(data), size_(size) {}
-      virtual ~InputReader() = default;
+        InputReader(const uint8_t* data, size_t size) : data_(data), size_(size) {}
+        virtual ~InputReader() = default;
 
-      virtual bool Read(Message* message) const = 0;
+        virtual bool Read(Message* message) const = 0;
 
-      const uint8_t* data() const { return data_; }
-      size_t size() const { return size_; }
+        const uint8_t* data() const { return data_; }
+        size_t size() const { return size_; }
 
     private:
-      const uint8_t* data_;
-      size_t size_;
-  };
+        const uint8_t* data_;
+        size_t size_;
+    };
 
-  class OutputWriter {
+    class OutputWriter {
     public:
-      OutputWriter(uint8_t* data, size_t size) : data_(data), size_(size) {}
-      virtual ~OutputWriter() = default;
+        OutputWriter(uint8_t* data, size_t size) : data_(data), size_(size) {}
+        virtual ~OutputWriter() = default;
 
-      virtual size_t Write(const Message& message) = 0;
+        virtual size_t Write(const Message& message) = 0;
 
-      uint8_t* data() const { return data_; }
-      size_t size() const { return size_; }
+        uint8_t* data() const { return data_; }
+        size_t size() const { return size_; }
 
     private:
-      uint8_t* data_;
-      size_t size_;
-  };
+        uint8_t* data_;
+        size_t size_;
+    };
 
-  class TextInputReader : public InputReader {
-  public:
-    using InputReader::InputReader;
-    bool Read(Message* message) const override { return ParseTextMessage(data(), size(), message); }
-  };
-
-  class TextOutputWriter : public OutputWriter {
+    class TextInputReader : public InputReader {
     public:
-      using OutputWriter::OutputWriter;
-      size_t Write(const Message& message) override { return SaveMessageAsText(message, data(), size()); }
-  };
+        using InputReader::InputReader;
+        bool Read(Message* message) const override { return ParseTextMessage(data(), size(), message); }
+    };
 
-  class BinaryInputReader : public InputReader {
+    class TextOutputWriter : public OutputWriter {
+        public:
+        using OutputWriter::OutputWriter;
+        size_t Write(const Message& message) override { return SaveMessageAsText(message, data(), size()); }
+    };
+
+    class BinaryInputReader : public InputReader {
+        public:
+        using InputReader::InputReader;
+        bool Read(Message* message) const override { return ParseBinaryMessage(data(), size(), message); }
+    };
+
+    class BinaryOutputWriter : public OutputWriter {
     public:
-      using InputReader::InputReader;
-      bool Read(Message* message) const override { return ParseBinaryMessage(data(), size(), message); }
-  };
+        using OutputWriter::OutputWriter;
+        size_t Write(const Message& message) override { return SaveMessageAsBinary(message, data(), size()); }
+    };
 
-  class BinaryOutputWriter : public OutputWriter {
+    class LastMutationCache {
     public:
-      using OutputWriter::OutputWriter;
-      size_t Write(const Message& message) override { return SaveMessageAsBinary(message, data(), size()); }
-  };
+        void Store(const uint8_t* data, size_t size, Message* message) {
+            if (!message_) message_.reset(message->New());
+            message->GetReflection()->Swap(message, message_.get());
+            data_.assign(data, data + size);
+        }
 
-  class LastMutationCache {
-    public:
-      void Store(const uint8_t* data, size_t size, Message* message) {
-        if (!message_) message_.reset(message->New());
-        message->GetReflection()->Swap(message, message_.get());
-        data_.assign(data, data + size);
-      }
+        bool LoadIfSame(const uint8_t* data, size_t size, Message* message) {
+            if (!message_ || size != data_.size() || !std::equal(data_.begin(), data_.end(), data))
+            return false;
 
-      bool LoadIfSame(const uint8_t* data, size_t size, Message* message) {
-        if (!message_ || size != data_.size() || !std::equal(data_.begin(), data_.end(), data))
-          return false;
-
-        message->GetReflection()->Swap(message, message_.get());
-        message_.reset();
-        return true;
-      }
+            message->GetReflection()->Swap(message, message_.get());
+            message_.reset();
+            return true;
+        }
 
     private:
-      std::vector<uint8_t> data_;
-      std::unique_ptr<Message> message_;
-  };
-
-  // Algorithm pick one item from the sequence of weighted items.
-  // https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_A-Chao
-  //
-  // Example:
-  //   WeightedReservoirSampler<int> sampler;
-  //   for(int i = 0; i < size; ++i)
-  //     sampler.Pick(weight[i], i);
-  //   return sampler.GetSelected();
-  template <class T, class RandomEngine = std::default_random_engine>
-  class WeightedReservoirSampler {
-    public:
-      explicit WeightedReservoirSampler(RandomEngine* random) : random_(random) {}
-
-      void Try(uint64_t weight, const T& item) { if (Pick(weight)) selected_ = item; }
-
-      const T& selected() const { return selected_; }
-
-      bool IsEmpty() const { return total_weight_ == 0; }
-
-    private:
-      bool Pick(uint64_t weight) {
-        if (weight == 0) return false;
-        total_weight_ += weight;
-        return weight == total_weight_ || 
-          std::uniform_int_distribution<uint64_t>(1, total_weight_)(*random_) <= weight;
-      }
-
-      T selected_ = {};
-      uint64_t total_weight_ = 0;
-      RandomEngine* random_;
-  };
+        std::vector<uint8_t> data_;
+        std::unique_ptr<Message> message_;
+    };
 }  // namespace protobuf_mutator
 
 //  size_t GetMaxSize(const InputReader& input, const OutputWriter& output, const Message& message) {

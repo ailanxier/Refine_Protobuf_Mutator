@@ -29,40 +29,40 @@ struct first_argument_type<Ret(Args...)>{
 
 
 // 最终实现的是 ProtoToDataHelper 函数
-#define DEFINE_AFL_PROTO_FUZZER_IMPL(use_binary, args...)                                                 \
-  static size_t ProtoToDataHelper(args);                                                                  \
-  using protobuf_mutator::aflplusplus::MutateHelper;                                                      \
-  using FuzzerProtoType = first_argument_type<decltype(ProtoToDataHelper)>::type;                         \
-  DEFINE_AFL_CUSTOM_INIT                                                                                  \
-  DEFINE_AFL_CUSTOM_DEINIT                                                                                \
-  DEFINE_AFL_CUSTOM_PROTO_MUTATOR_IMPL(use_binary, FuzzerProtoType)                                       \
-  DEFINE_AFL_CUSTOM_PROTO_POST_PROCESS_IMPL(use_binary, FuzzerProtoType)                                  \
-  static size_t ProtoToDataHelper(args)
+#define DEFINE_AFL_PROTO_FUZZER_IMPL(use_binary, args...)                                                   \
+    static size_t ProtoToDataHelper(args);                                                                  \
+    using protobuf_mutator::aflplusplus::MutateHelper;                                                      \
+    using FuzzerProtoType = first_argument_type<decltype(ProtoToDataHelper)>::type;                         \
+    DEFINE_AFL_CUSTOM_INIT                                                                                  \
+    DEFINE_AFL_CUSTOM_DEINIT                                                                                \
+    DEFINE_AFL_CUSTOM_PROTO_MUTATOR_IMPL(use_binary, FuzzerProtoType)                                       \
+    DEFINE_AFL_CUSTOM_PROTO_POST_PROCESS_IMPL(use_binary, FuzzerProtoType)                                  \
+    static size_t ProtoToDataHelper(args)
 
-#define DEFINE_AFL_CUSTOM_INIT  extern "C"                                                               \
-  MutateHelper *afl_custom_init(void *afl, unsigned int s){                                              \
-      MutateHelper *mutate_helper = new MutateHelper(s);                                                 \
-      std::ofstream seed_of("seed.txt", std::ios::trunc);                                                \
-      seed_of << s << std::endl;                                                                         \
-      seed_of.close();                                                                                   \
-      return mutate_helper;                                                                              \
-  } 
+#define DEFINE_AFL_CUSTOM_INIT  extern "C"                                                                 \
+    MutateHelper *afl_custom_init(void *afl, unsigned int s){                                              \
+        MutateHelper *mutate_helper = new MutateHelper(s);                                                 \
+        std::ofstream seed_of("seed.txt", std::ios::trunc);                                                \
+        seed_of << s << std::endl;                                                                         \
+        seed_of.close();                                                                                   \
+        return mutate_helper;                                                                              \
+    } 
 
 // Deinitialize everything  
-#define DEFINE_AFL_CUSTOM_DEINIT  extern "C"                                                             \
-  void afl_custom_deinit(MutateHelper *m){                                                               \
-      delete m;                                                                                          \
-  }
+#define DEFINE_AFL_CUSTOM_DEINIT  extern "C"                                                               \
+    void afl_custom_deinit(MutateHelper *m){                                                               \
+        delete m;                                                                                          \
+    }
 
 // Implementation of macros above.
-#define DEFINE_AFL_CUSTOM_PROTO_MUTATOR_IMPL(use_binary, Proto) extern "C"                               \
-  size_t afl_custom_fuzz(MutateHelper *m, unsigned char *buf, size_t buf_size, unsigned char **out_buf,  \
-                    unsigned char *add_buf, size_t add_buf_size, size_t max_size) {                      \
-    Proto input1;                                                                                        \
-    Proto input2;                                                                                        \
-    return AFL_CustomProtoMutator(m, use_binary, buf, buf_size, out_buf,                                 \
-                                add_buf, add_buf_size, max_size, &input1, &input2);                      \
-  }
+#define DEFINE_AFL_CUSTOM_PROTO_MUTATOR_IMPL(use_binary, Proto) extern "C"                                   \
+    size_t afl_custom_fuzz(MutateHelper *m, unsigned char *buf, size_t buf_size, unsigned char **out_buf,    \
+                        unsigned char *add_buf, size_t add_buf_size, size_t max_size) {                      \
+        Proto input1;                                                                                        \
+        Proto input2;                                                                                        \
+        return AFL_CustomProtoMutator(m, use_binary, buf, buf_size, out_buf,                                 \
+                                    add_buf, add_buf_size, max_size, &input1, &input2);                      \
+    }
 
 // A post-processing function to use right before AFL++ writes the test case to disk in order to execute the target.
 #define DEFINE_AFL_CUSTOM_PROTO_POST_PROCESS_IMPL(use_binary, Proto)  extern "C"                                    \
@@ -79,23 +79,22 @@ namespace protobuf_mutator{
   namespace aflplusplus {
     // Embedding buf_ in class MutateHelper here to prevent memory fragmentation caused by frequent memory allocation.
     class MutateHelper {
-      public: 
-          size_t GetSeed() const { return seed_; }
-          size_t GetLen() const { return len_; }
-          void SetLen(size_t len) { len_ = len; }
-          uint8_t* GetOutBuf() { return buf_; }
-          uint8_t* ReallocBuf(size_t len);
-          size_t GetIndex() const { return index; }
-          void SetIndex(size_t i) { index = i; }
-          MutateHelper(size_t s);
-          ~MutateHelper() = default;
-          
-          
-      private:
-          size_t seed_;
-          uint8_t *buf_;  // 每次 afl_custom_fuzz() 的 out_buf
-          size_t len_;
-          size_t index = 1;
+        public: 
+            size_t GetSeed() const { return seed_; }
+            size_t GetLen() const { return len_; }
+            void SetLen(size_t len) { len_ = len; }
+            uint8_t* GetOutBuf() { return buf_; }
+            uint8_t* ReallocBuf(size_t len);
+            size_t GetIndex() const { return index; }
+            void SetIndex(size_t i) { index = i; }
+            MutateHelper(size_t s);
+            ~MutateHelper() = default;
+            
+        private:
+            size_t seed_;
+            uint8_t *buf_;  // 每次 afl_custom_fuzz() 的 out_buf
+            size_t len_;
+            size_t index = 1;
     };
 
     //Implementation of Crossover and Mutation of test cases in A(FL)_CustomProtoMutator.

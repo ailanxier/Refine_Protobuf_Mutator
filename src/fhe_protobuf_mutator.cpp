@@ -19,7 +19,7 @@ namespace fhe_protobuf_mutator {
     }
 
     size_t TestMessageHandler::TransferMessageType(const TestRootMsg& input, unsigned char **out_buf){
-        of << input.param().num32() << " " << input.param().num64() << std::endl;
+        // of << input.param().num32() << " " << input.param().num64() << std::endl;
         std::string buffer;
         input.SerializePartialToString(&buffer);
         strcpy(temp, buffer.c_str());

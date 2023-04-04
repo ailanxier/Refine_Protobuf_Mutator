@@ -1,5 +1,5 @@
 syntax = "proto3";
-package OpenFHE;
+// package OpenFHE;
 
 /* 
  * The secret key distribution for CKKS should either be SPARSE_TERNARY or UNIFORM_TERNARY.
@@ -107,6 +107,12 @@ enum ExecutionMode {
 enum DecryptionNoiseMode {
     FIXED_NOISE_DECRYPT    = 0;
     NOISE_FLOODING_DECRYPT = 1;
+}
+
+message RootMsg {
+    FHEParameter param = 1;
+    EvalData evalData = 2;
+    APISequence apiSequence = 3;
 }
 
 message FHEParameter {

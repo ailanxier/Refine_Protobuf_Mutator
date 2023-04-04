@@ -3,7 +3,7 @@
 using namespace std;
 using namespace google::protobuf;
 
-enum SecretKeyDist {
+enum cppSecretKeyDist {
     GAUSSIAN,
     UNIFORM_TERNARY,
     SPARSE_TERNARY

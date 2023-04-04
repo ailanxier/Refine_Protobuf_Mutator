@@ -57,16 +57,16 @@ inline void print_diff(const string& text1, const string& text2){
     size_t i = lines1.size();
     size_t j = lines2.size();
     while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && lines1[i - 1] == lines2[j - 1]) {
-          i--;
-          j--;
-      } else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-          result.push_back(COUT_GREEN + "+ " + lines2[j - 1] + COUT_END_COLOR);
-          j--;
-      } else {
-          result.push_back(COUT_RED + "- " + lines1[i - 1] + COUT_END_COLOR);
-          i--;
-      }
+		if (i > 0 && j > 0 && lines1[i - 1] == lines2[j - 1]) {
+			i--;
+			j--;
+		} else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+			result.push_back(COUT_GREEN + "+ " + lines2[j - 1] + COUT_END_COLOR);
+			j--;
+		} else {
+			result.push_back(COUT_RED + "- " + lines1[i - 1] + COUT_END_COLOR);
+			i--;
+		}
     }
 
     // Reverse the order of the diff operations to match Git diff output
@@ -96,17 +96,17 @@ int main(int argc, char *argv[]){
     string test_str = msg1.DebugString();
     MutateHelper* mutatorHelper = afl_custom_init(nullptr, seed);
     for(int i = 0; i < 50; i++) {
-      uint8_t *out_buf = nullptr;
-      size_t new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data1.c_str(), data1.size(),
-                        &out_buf, (uint8_t*)data2.c_str(), data2.size(), data1.size() + data2.size() + 600);
-      uint8_t *post_out = nullptr;
-      mutatorHelper->SetIndex(i);
-      // size_t post_out_size = afl_custom_post_process(mutatorHelper, out_buf, new_size, &post_out);
-      print_words({"==============", ToStr(i), "=============="}, 2, NO_STAR_LINE);
-      string mutate_str = string((char*)out_buf, new_size);
-      msg2.ParseFromString(mutate_str);
-      mutate_str = msg2.DebugString();
-      print_diff(test_str, mutate_str);
+		uint8_t *out_buf = nullptr;
+		size_t new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data1.c_str(), data1.size(),
+							&out_buf, (uint8_t*)data2.c_str(), data2.size(), data1.size() + data2.size() + 600);
+		uint8_t *post_out = nullptr;
+		mutatorHelper->SetIndex(i);
+		// size_t post_out_size = afl_custom_post_process(mutatorHelper, out_buf, new_size, &post_out);
+		print_words({"==============", ToStr(i), "=============="}, 2, NO_STAR_LINE);
+		string mutate_str = string((char*)out_buf, new_size);
+		msg2.ParseFromString(mutate_str);
+		mutate_str = msg2.DebugString();
+		print_diff(test_str, mutate_str);
     }
     afl_custom_deinit(mutatorHelper);
     return 0;

@@ -27,7 +27,7 @@ namespace fhe_protobuf_mutator {
 //   public:
 //     using PostProcessors = std::unordered_multimap<const Descriptor*, Mutator::PostProcess>;
 
-//     PostProcessing(bool keep_initialized, const PostProcessors& post_processors, RandomEngine* random)
+//     PostProcessing(bool keep_initialized, const PostProcessors& post_processors, Random* random)
 //         : keep_initialized_(keep_initialized), post_processors_(post_processors), random_(random) {}
 
 //     void Run(Message* message, int max_depth) {
@@ -74,7 +74,7 @@ namespace fhe_protobuf_mutator {
 //   private:
 //     bool keep_initialized_;
 //     const PostProcessors& post_processors_;
-//     RandomEngine* random_;
+//     Random* random_;
 //   };
 //   void Mutator::RegisterPostProcessor(const Descriptor* desc, PostProcess callback) {
 //     post_processors_.emplace(desc, callback);
