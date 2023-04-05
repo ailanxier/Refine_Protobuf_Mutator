@@ -32,7 +32,7 @@ int main(int argc ,char**argv){
         param->set_num64(num64[i]);
         param->set_secretkeydist(skd[i]);
         
-        EvalData::OneDataList oneDataList;
+        EData::OneDataList oneDataList;
         for(auto & dataList : allData[i]){
             oneDataList.clear_datalist();
             for(auto & data : dataList)
@@ -40,38 +40,38 @@ int main(int argc ,char**argv){
             evalData->add_alldatalists()->CopyFrom(oneDataList);
         }
         
-        APISequence::OneAPI oneAPI;
+        APISeq::OneAPI oneAPI;
         for(auto it : apiList[i]){
             if(auto* a2p = dynamic_cast<AddTwoList*>(it)){
-                APISequence::OneAPI::AddTwoList addTwoList;
+                APISeq::OneAPI::AddTwoList addTwoList;
                 addTwoList.set_src1(a2p->src1);
                 addTwoList.set_src2(a2p->src2);
                 oneAPI.mutable_addtwolist()->CopyFrom(addTwoList);
                 oneAPI.set_dst(a2p->dst);
                 apiSeq->add_apilist()->CopyFrom(oneAPI);
             }else if(auto* ap = dynamic_cast<AddManyList*>(it)){
-                APISequence::OneAPI::AddManyList addManyList;
+                APISeq::OneAPI::AddManyList addManyList;
                 for(auto & src : ap->srcs)
                     addManyList.add_srcs(src);
                 oneAPI.mutable_addmanylist()->CopyFrom(addManyList);
                 oneAPI.set_dst(ap->dst);
                 apiSeq->add_apilist()->CopyFrom(oneAPI);
             }else if(auto* m2p = dynamic_cast<MulTwoList*>(it)){
-                APISequence::OneAPI::MulTwoList mulTwoList;
+                APISeq::OneAPI::MulTwoList mulTwoList;
                 mulTwoList.set_src1(m2p->src1);
                 mulTwoList.set_src2(m2p->src2);
                 oneAPI.mutable_multwolist()->CopyFrom(mulTwoList);
                 oneAPI.set_dst(m2p->dst);
                 apiSeq->add_apilist()->CopyFrom(oneAPI);
             }else if(auto* mp = dynamic_cast<MulManyList*>(it)){
-                APISequence::OneAPI::MulManyList mulManyList;
+                APISeq::OneAPI::MulManyList mulManyList;
                 for(auto & src : mp->srcs)
                     mulManyList.add_srcs(src);
                 oneAPI.mutable_mulmanylist()->CopyFrom(mulManyList);
                 oneAPI.set_dst(mp->dst);
                 apiSeq->add_apilist()->CopyFrom(oneAPI);
             }else if(auto* sp = dynamic_cast<ShiftOneList*>(it)){
-                APISequence::OneAPI::ShiftOneList shiftOneList;
+                APISeq::OneAPI::ShiftOneList shiftOneList;
                 shiftOneList.set_src(sp->src);
                 shiftOneList.set_index(sp->index);
                 oneAPI.mutable_shiftonelist()->CopyFrom(shiftOneList);

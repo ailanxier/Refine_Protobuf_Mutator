@@ -7,7 +7,7 @@ endif()
 
 
 file(GLOB TEST_SRC_LIST "*.cpp")
-set(FHE_PROTO_SRC ${CMAKE_SOURCE_DIR}/src/proto/fhe.pb.cc)
+set(FHE_PROTO_SRC ${CMAKE_SOURCE_DIR}/src/proto/openfhe_ckks.pb.cc)
 add_executable(test ${TEST_SRC_LIST} ${FHE_PROTO_SRC})
 target_link_libraries(test ${PROTOBUF_LIBRARIES})
 target_include_directories(test PUBLIC ${CMAKE_SOURCE_DIR}/src/)

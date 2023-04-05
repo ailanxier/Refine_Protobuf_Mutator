@@ -16,21 +16,23 @@ namespace protobuf_mutator {
      * @brief Types of mutation on field in proto3
      * @details 
      * 1. Field include simple field, enum field, oneof field and repeated field.
-     * 2. Oneof field can't be repeated and unset, so it can't be added or deleted (only mutated).
-     * 3. Only simple field, enum field are considered for whether they are set or unset.
-     *    Unset for simple field: has_xxx() returns false.
-     * 4. An optional field is considered unset when it has no value, 
+     * 2. Simple field, enum field, oneof field need to be checked whether they are set or unset.
+     *    Unset for simple field: has_xxx() returns false and DebugString() shows nothing.
+     * 3. An optional field is considered unset when it has no value, 
      *    while a singular field is considered unset when it has the default value. 
+     * 4. Oneof field needs to be specially handled, and it can't be repeated.
      */
     enum class FieldMuationType : uint8_t {
         // 1. Add an unset field with random values.
-        // 2. Add some new fields (including simple fields, enums, messages) with random values to a repeated field.
+        // 2. Add some new fields (including simple fields, enums, oneof) with random values to a repeated field.
         //    The total length of the newly added fields will not exceed MAX_NEW_REPEATED_SIZE.
         Add   ,                
         // 1. Deletes a set field.
         // 2. Iterate each field in a repeated field and delete it with a certain probability
         Delete,                
-        Mutate,                // Similar to the "delete" process, but byte mutation is used instead.
+        // Similar to the "delete" process, but byte mutation is used instead. 
+        // Not used for mutate embedded message.
+        Mutate,                
         Shuffle,               // Shuffle the order of the fields in a repeated field.
         None  ,                // Do nothing.
         END = None             // used to count the number of fieldMuationType.
@@ -52,9 +54,7 @@ namespace protobuf_mutator {
         END = None  // used to count the number of crossoverType
     };
     using MutationBitset = bitset<static_cast<size_t>(FieldMuationType::END) + 1>;
-    using CrossOverBitset = bitset<static_cast<size_t>(CrossoverType::END) + 1>;
-    using messageVec = vector<Message*>;
-    using ConstMessageVec = vector<const Message*>;
+    using CrossoverBitset = bitset<static_cast<size_t>(CrossoverType::END) + 1>;
     class Mutator {
     public:
         // seed: value to initialize random number generator.
@@ -69,7 +69,7 @@ namespace protobuf_mutator {
          * @details Three possible operations can be performed: Add£¬Delete, Mutate and Shuffle. 
          *          Refer to the definition of FieldMuationType.
          */
-        void Mutate(Message* message, size_t max_size);
+        void Mutate(Message* message, size_t& max_size);
 
         /**
          * @brief Crossover message1 and message2, and save the resulting message in message1.
@@ -77,48 +77,11 @@ namespace protobuf_mutator {
          * @details Two possible operations can be performed: Replace and Add.
          *          Refer to the definition of CrossoverType.
          */
-        void CrossOver(const Message& message1, Message* message2, size_t max_size);
-
-        /**
-         * @brief Get a random number within the range [mi, ma].
-         */
-        template <typename T>
-        T GetRandomNum(T mi, T ma){ return random_.randomNum(mi, ma); }
-
-        /**
-         * @brief Get a random integer within the range [0, ma] as an array index.
-         */
-        template <typename T>
-        T GetRandomIndex(T ma) { return random_.randomIndex(ma); }
-
-        /**
-         * @brief Flips random bit in the value.
-         */    
-        template <class T>
-        T FlipBit(T value) { return random_.flipBit(value); }
-
-        Random* random() { return &random_; }
-        
-    protected:
-        // simple field mutation
-        virtual int32_t MutateInt32(int32_t value);
-        virtual int64_t MutateInt64(int64_t value);
-        virtual uint32_t MutateUInt32(uint32_t value);
-        virtual uint64_t MutateUInt64(uint64_t value);
-        virtual float MutateFloat(float value);
-        virtual double MutateDouble(double value);
-        virtual bool MutateBool(bool value);
-        virtual size_t MutateEnum(size_t index, size_t item_count);
+        void Crossover(const Message& message1, Message* message2, size_t& max_size);
 
     private:
-        friend class FieldMutator;
-        friend class TestMutator;
-        void fieldMutation(Message* msg, int& remain_size);
-        void TryMutateField(Message* msg, FieldDescriptor* field, MutationBitset& allowed_mutations, int& remain_size);
-        bool keep_initialized_ = true;
-        size_t random_to_default_ratio_ = 100;
-        const uint64_t kDefaultMutateWeight = 1;
-        Random random_;
+        void messageMutation(Message* msg, size_t& remain_size);
+        void TryMutateField(Message* msg, const FieldDescriptor* field, MutationBitset& allowed_mutations, size_t& remain_size);
     };
 }  // namespace protobuf_mutator
 

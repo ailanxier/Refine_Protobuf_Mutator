@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <stddef.h>
-#include <random>
 #include "openfhe_ckks.pb.h"
 #include "afl_mutator.h"
 #include "google/protobuf/text_format.h"
@@ -32,90 +31,6 @@ int main(int argc ,char**argv){
     int maxsize = 1000;
     createRandomMessage(&msg, maxsize, test.random());
     print_words({"maxsize:", to_string(maxsize), "size:", to_string(msg.ByteSizeLong())}, 4);
-    // int i = 0;
-    // // for(int i = 0;i < SeedNum;i++){
-    //     auto param = msg.mutable_param();
-    //     auto evalData = msg.mutable_evaldata();
-    //     auto apiSeq = msg.mutable_apisequence();
-    //     // auto test = apiSeq->GetDescriptor()->field(0);
-    //     // print_words({test->name(), to_string(test->number()), to_string(test->type())}, 3);
-    //     // auto ref = apiSeq->GetReflection();
-    //     // auto tm = ref->MutableMessage(apiSeq, test);
-    //     // auto tref = tm->GetReflection();
-    //     // auto tdesc = tm->GetDescriptor();
-    //     // auto oneof = tdesc->field(0)->containing_oneof();
-    //     // if(oneof){
-    //     //     FieldDescriptor* last = nullptr;
-    //     //     for(int i = 0;i < oneof->field_count();i++){
-    //     //         auto field = tdesc->field(i);
-    //     //         print_words({field->name(), to_string(field->number()), to_string(field->cpp_type())}, 3);
-    //     //         tref->SetAllocatedMessage(tm, tref->MutableMessage(tm, field)->New(), field);
-    //     //         if(last)
-    //     //         cout<<last->name()<<" "<<tref->HasField(*tm, last)<<endl;
-    //     //         last = const_cast<FieldDescriptor*>(field);
-    //     //     }
-    //     // }
-    //     auto evd = msg.GetDescriptor()->field(1);
-    //     auto evm = msg.GetReflection()->MutableMessage(&msg, evd);
-    //     auto test = evm->GetDescriptor()->field(1);
-    //     auto ref = evm->GetReflection();
-        
-    //     auto na = ref->AddMessage(evm, test);
-    //     auto oner = na->GetReflection();
-    //     auto oned = na->GetDescriptor();
-    //     auto onef = oned->field(0);
-    //     oner->AddDouble(na, onef, 1.0);
-        
-    //     // print_words({to_string(ref->FieldSize(*evm, test)), to_string(t)}, 1);
-        
-    //     EvalData::OneDataList oneDataList;
-    //     for(auto & dataList : allData[i]){
-    //         oneDataList.clear_datalist();
-    //         for(auto & data : dataList)
-    //             oneDataList.add_datalist(data);
-    //         evalData->add_alldatalists()->CopyFrom(oneDataList);
-    //     }
-       
-    //     APISequence::OneAPI oneAPI;
-    //     for(auto it : apiList[i]){
-    //         if(auto* a2p = dynamic_cast<AddTwoList*>(it)){
-    //             APISequence::OneAPI::AddTwoList addTwoList;
-    //             addTwoList.set_src1(a2p->src1);
-    //             addTwoList.set_src2(a2p->src2);
-    //             oneAPI.mutable_addtwolist()->CopyFrom(addTwoList);
-    //             oneAPI.set_dst(a2p->dst);
-    //             apiSeq->add_apilist()->CopyFrom(oneAPI);
-    //         }else if(auto* ap = dynamic_cast<AddManyList*>(it)){
-    //             APISequence::OneAPI::AddManyList addManyList;
-    //             for(auto & src : ap->srcs)
-    //                 addManyList.add_srcs(src);
-    //             oneAPI.mutable_addmanylist()->CopyFrom(addManyList);
-    //             oneAPI.set_dst(ap->dst);
-    //             apiSeq->add_apilist()->CopyFrom(oneAPI);
-    //         }else if(auto* m2p = dynamic_cast<MulTwoList*>(it)){
-    //             APISequence::OneAPI::MulTwoList mulTwoList;
-    //             mulTwoList.set_src1(m2p->src1);
-    //             mulTwoList.set_src2(m2p->src2);
-    //             oneAPI.mutable_multwolist()->CopyFrom(mulTwoList);
-    //             oneAPI.set_dst(m2p->dst);
-    //             apiSeq->add_apilist()->CopyFrom(oneAPI);
-    //         }else if(auto* mp = dynamic_cast<MulManyList*>(it)){
-    //             APISequence::OneAPI::MulManyList mulManyList;
-    //             for(auto & src : mp->srcs)
-    //                 mulManyList.add_srcs(src);
-    //             oneAPI.mutable_mulmanylist()->CopyFrom(mulManyList);
-    //             oneAPI.set_dst(mp->dst);
-    //             apiSeq->add_apilist()->CopyFrom(oneAPI);
-    //         }else if(auto* sp = dynamic_cast<ShiftOneList*>(it)){
-    //             APISequence::OneAPI::ShiftOneList shiftOneList;
-    //             shiftOneList.set_src(sp->src);
-    //             shiftOneList.set_index(sp->index);
-    //             oneAPI.mutable_shiftonelist()->CopyFrom(shiftOneList);
-    //             oneAPI.set_dst(sp->dst);
-    //             apiSeq->add_apilist()->CopyFrom(oneAPI);
-    //         }
-    //         // cout<<it->dst<<endl;
-    //     }
         // print_words({"==============", to_string(i), "=============="}, 2);
         // ofstream OutFile(to_string(i)+".txt", ios::out); 
         // msg.SerializePartialToOstream(&OutFile);

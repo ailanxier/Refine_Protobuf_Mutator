@@ -207,9 +207,9 @@ public:
 
     void Store(double value) const {
         if (is_repeated())
-        reflection().SetRepeatedDouble(message_, descriptor(), index(), value);
+            reflection().SetRepeatedDouble(message_, descriptor(), index(), value);
         else
-        reflection().SetDouble(message_, descriptor(), value);
+            reflection().SetDouble(message_, descriptor(), value);
     }
 
     void Store(float value) const {
