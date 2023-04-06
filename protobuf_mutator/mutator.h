@@ -6,9 +6,9 @@
 #include <iostream>
 #include <map>
 #include <utility>
+#include <iomanip>
 #include "proto_util.h"
 #include "mutate_util.h"
-#include "field_instance.h"
 
 namespace protobuf_mutator {
 
@@ -26,15 +26,15 @@ namespace protobuf_mutator {
         // 1. Add an unset field with random values.
         // 2. Add some new fields (including simple fields, enums, oneof) with random values to a repeated field.
         //    The total length of the newly added fields will not exceed MAX_NEW_REPEATED_SIZE.
-        Add   ,                
+        MutationAdd  ,                
         // 1. Deletes a set field.
         // 2. Iterate each field in a repeated field and delete it with a certain probability
-        Delete,                
+        Delete       ,                
         // Similar to the "delete" process, but byte mutation is used instead. 
         // Not used for mutate embedded message.
-        Mutate,                
-        Shuffle,               // Shuffle the order of the fields in a repeated field.
-        None  ,                // Do nothing.
+        Mutate       ,                
+        Shuffle      ,         // Shuffle the order of the fields in a repeated field.
+        None         ,         // Do nothing.
         END = None             // used to count the number of fieldMuationType.
     };
 
@@ -44,17 +44,17 @@ namespace protobuf_mutator {
      *    After crossover the messages, do not perform recursive crossover on this message.
      */ 
     enum class CrossoverType : uint8_t {
-        // 1. Replace some set fields (including embedded message) in message1 with the fields from message2.
+        // 1. Replace some set fields in message1 with the fields from message2.
         // 2. Replace some fields within a repeated field in message1 with message2.
-        Replace  ,  
+        Replace     ,  
         // 1. Add some new simple fields from message2 to the corresponding unset fields in message1.
         // 2. Add some new fields from message2 to a repeated field in message1. 
-        Add      ,     
-        None     ,  // Do nothing. But recursive crossover for embedded message types.
-        END = None  // used to count the number of crossoverType
+        CrossoverAdd,     
+        None        ,  // Do nothing. But recursive crossover for embedded message types.
+        END = None     // used to count the number of crossoverType
     };
-    using MutationBitset = bitset<static_cast<size_t>(FieldMuationType::END) + 1>;
-    using CrossoverBitset = bitset<static_cast<size_t>(CrossoverType::END) + 1>;
+    using MutationBitset = bitset<static_cast<int>(FieldMuationType::END) + 1>;
+    using CrossoverBitset = bitset<static_cast<int>(CrossoverType::END) + 1>;
     class Mutator {
     public:
         // seed: value to initialize random number generator.
@@ -69,7 +69,7 @@ namespace protobuf_mutator {
          * @details Three possible operations can be performed: Add£¬Delete, Mutate and Shuffle. 
          *          Refer to the definition of FieldMuationType.
          */
-        void Mutate(Message* message, size_t& max_size);
+        void Mutate(Message* message, int& max_size);
 
         /**
          * @brief Crossover message1 and message2, and save the resulting message in message1.
@@ -77,11 +77,13 @@ namespace protobuf_mutator {
          * @details Two possible operations can be performed: Replace and Add.
          *          Refer to the definition of CrossoverType.
          */
-        void Crossover(const Message& message1, Message* message2, size_t& max_size);
+        void Crossover(Message* message1, const Message* message2, int& max_size);
 
     private:
-        void messageMutation(Message* msg, size_t& remain_size);
-        void TryMutateField(Message* msg, const FieldDescriptor* field, MutationBitset& allowed_mutations, size_t& remain_size);
+        void MessageMutation(Message* msg, int& remain_size);
+        void TryMutateField(Message* msg, const FieldDescriptor* field, MutationBitset& allowed_mutations, int& remain_size);
+        void MessageCrossover(Message* msg1, const Message* msg2, int& remain_size);
+        void TryCrossoverField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, CrossoverBitset& allowed_crossovers, int& remain_size);
     };
 }  // namespace protobuf_mutator
 

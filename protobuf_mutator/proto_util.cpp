@@ -12,70 +12,75 @@ namespace protobuf_mutator {
         return &mutator;
     }
 
+    int GetMaxSize(const InputReader& input, const OutputWriter& output, const Message& message) {
+        int max_size = message.ByteSizeLong() + output.size();
+        max_size -= std::min(max_size, input.size());
+        return max_size;
+    }
 
-    size_t MutateMessage(unsigned int seed, const InputReader& input, OutputWriter* output, Message* message) {
-        GetMutator()->Seed(seed);
+    int MutateMessage(const InputReader& input, OutputWriter* output, Message* message) {
         input.Read(message);
-        size_t max_size = output->size();
+        int max_size = GetMaxSize(input, *output, *message);
+        int test_size = max_size;
         GetMutator()->Mutate(message, max_size);
-        if (size_t new_size = output->Write(*message)) {
-            assert(new_size <= max_size);
+        if (int new_size = output->Write(*message)) {
+            // cout<<"mutate:"<<new_size<<" "<<max_size<<endl;
+            assert(new_size <= test_size);
             GetCache()->Store(output->data(), new_size, message);
             return new_size;
         }
         return 0;
     }
 
-    size_t CrossOverMessages(unsigned int seed, const InputReader& input1, const InputReader& input2, 
+    int CrossOverMessages(const InputReader& input1, const InputReader& input2, 
                             OutputWriter* output, Message* message1, Message* message2) {
-        GetMutator()->Seed(seed);
         input1.Read(message1);
         input2.Read(message2);
-        size_t max_size = output->size();
-        GetMutator()->Crossover(*message2, message1, max_size);
-        if (size_t new_size = output->Write(*message1)) {
-        assert(new_size <= max_size);
-        GetCache()->Store(output->data(), new_size, message1);
-        return new_size;
+        int max_size = GetMaxSize(input1, *output, *message1);
+        int test_size = max_size;
+        GetMutator()->Crossover(message1, message2, max_size);
+        if (int new_size = output->Write(*message1)) {
+            // cout<<"cross:"<<new_size<<" "<<max_size<<endl;
+            assert(new_size <= test_size);
+            GetCache()->Store(output->data(), new_size, message1);
+            return new_size;
         }
         return 0;
     }
 
-    size_t CustomProtoMutate(bool binary, uint8_t* data, size_t size, size_t max_size, unsigned int seed,
-                                Message* message) {
+    int CustomProtoMutate(bool binary, uint8_t* data, int size, int max_size, Message* message) {
         if(binary) {
             BinaryInputReader b_input(data, size);
             BinaryOutputWriter b_output(data, max_size);
-            return MutateMessage(seed, b_input, &b_output, message);
+            return MutateMessage(b_input, &b_output, message);
         } else {
             TextInputReader t_input(data, size);
             TextOutputWriter t_output(data, max_size);
-            return MutateMessage(seed, t_input, &t_output, message);
+            return MutateMessage(t_input, &t_output, message);
         }
     }
 
-    size_t CustomProtoCrossOver(bool binary, const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2, 
-                    uint8_t* out, size_t max_out_size, unsigned int seed, Message* message1, Message* message2) {
+    int CustomProtoCrossOver(bool binary, const uint8_t* data1, int size1, const uint8_t* data2, int size2, 
+                    uint8_t* out, int max_out_size, Message* message1, Message* message2) {
         if(binary){
             BinaryInputReader b_input1(data1, size1);
             BinaryInputReader b_input2(data2, size2);
             BinaryOutputWriter b_output(out, max_out_size);
-            return CrossOverMessages(seed, b_input1, b_input2, &b_output, message1, message2);
+            return CrossOverMessages(b_input1, b_input2, &b_output, message1, message2);
         } else {
             TextInputReader t_input1(data1, size1);
             TextInputReader t_input2(data2, size2);
             TextOutputWriter t_output(out, max_out_size);
-            return CrossOverMessages(seed, t_input1, t_input2, &t_output, message1, message2);
+            return CrossOverMessages(t_input1, t_input2, &t_output, message1, message2);
         }
     }
 
-    bool LoadProtoInput(bool binary, const uint8_t* data, size_t size, Message* input) {
+    bool LoadProtoInput(bool binary, const uint8_t* data, int size, Message* input) {
         if (GetCache()->LoadIfSame(data, size, input)) return true;
         auto result = binary ? ParseBinaryMessage(data, size, input) : ParseTextMessage(data, size, input);
         if (!result) return false;
         return true;
     }
-
 
     bool ParseBinaryMessage(const string& data, Message* output) {
         output->Clear();
@@ -86,8 +91,8 @@ namespace protobuf_mutator {
         return true;
     }
 
-    bool ParseBinaryMessage(const uint8_t* data, size_t size, Message* output) {
-        return ParseBinaryMessage({reinterpret_cast<const char*>(data), size}, output);
+    bool ParseBinaryMessage(const uint8_t* data, int size, Message* output) {
+        return ParseBinaryMessage({reinterpret_cast<const char*>(data), (size_t)size}, output);
     }
 
     string SaveMessageAsBinary(const Message& message) {
@@ -96,7 +101,7 @@ namespace protobuf_mutator {
         return tmp;
     }
 
-    size_t SaveMessageAsBinary(const Message& message, uint8_t* data, size_t max_size) {
+    int SaveMessageAsBinary(const Message& message, uint8_t* data, int max_size) {
         string result = SaveMessageAsBinary(message);
         if (result.size() <= max_size) {
             memcpy(data, result.data(), result.size());
@@ -118,8 +123,8 @@ namespace protobuf_mutator {
         return true;
     }
 
-    bool ParseTextMessage(const uint8_t* data, size_t size, Message* output) {
-        return ParseTextMessage({reinterpret_cast<const char*>(data), size}, output);
+    bool ParseTextMessage(const uint8_t* data, int size, Message* output) {
+        return ParseTextMessage({reinterpret_cast<const char*>(data), (size_t)size}, output);
     }
 
     string SaveMessageAsText(const Message& message) {
@@ -128,7 +133,7 @@ namespace protobuf_mutator {
         return tmp;
     }
 
-    size_t SaveMessageAsText(const Message& message, uint8_t* data, size_t max_size) {
+    int SaveMessageAsText(const Message& message, uint8_t* data, int max_size) {
         string result = SaveMessageAsText(message);
         if (result.size() <= max_size) {
             memcpy(data, result.data(), result.size());

@@ -13,6 +13,8 @@ namespace protobuf_mutator {
     using std::placeholders::_1;
     using std::vector;
     using std::shuffle;
+    using std::cout;
+    using std::endl;
     class RandomEngine{
     public:
         void Seed(unsigned int seed) {
@@ -71,26 +73,39 @@ namespace protobuf_mutator {
         flipBit(sizeof(value), reinterpret_cast<uint8_t*>(&value));
         return value;
     }
-    inline bool canMutate() { return GetRandomNum(1, MUTATE_PROBABILITY) == 1;}
-    inline bool canDelete() { return GetRandomNum(1, DELETE_PROBABILITY) == 1;}
-    inline bool isMessageType(const FieldDescriptor* field) {return field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE;}
+    inline bool CanMutate() { return GetRandomNum(1, MUTATE_PROBABILITY) == 1;}
+    inline bool CanDelete() { return GetRandomNum(1, DELETE_PROBABILITY) == 1;}
+    inline bool IsMessageType(const FieldDescriptor* field) {return field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE;}
+    // XXX: only for small message
+    inline int  GetMessageSize(const Message* msg) {return (int)msg->ByteSizeLong();}
+
+    // ----------------------Mutate functions------------------------
     // recursive create a message with random value
-    void createRandomMessage(Message* msg, size_t& remain_size);
+    void createRandomMessage(Message* msg, int& remain_size);
     // Add some new fields (including simple fields, enums, messages) with random values to a repeated field.
-    void AddRepeatedField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
+    void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size);
     // Add an unset field with random values.
-    void AddUnsetField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
+    void AddUnsetField(Message* msg, const FieldDescriptor* field, int& remain_size);
     // Iterate each field in a repeated field and delete it with a certain probability
-    void DeleteRepeatedField(Message* msg, const FieldDescriptor* field, size_t& remain_size);   
+    void DeleteRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size);   
     // Deletes a set field
-    void DeleteSetField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
+    void DeleteSetField(Message* msg, const FieldDescriptor* field, int& remain_size);
     // Similar to the "delete" process, but byte mutation is used instead. 
     // Not used for mutate embedded message.
-    void MutateRepeatedField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
-    void MutateSetField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
+    void MutateRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size);
+    void MutateSetField(Message* msg, const FieldDescriptor* field, int& remain_size);
     // Shuffle the order of the fields in a repeated field.
-    void ShuffleRepeatedField(Message* msg, const FieldDescriptor* field, size_t& remain_size);
+    void ShuffleRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size);
 
+    // ----------------------Crossover functions----------------------
+    // Replace some fields within a repeated field in message1 with message2.
+    void ReplaceRepeatedField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
+    // Replace some set fields in message1 with the fields from message2.
+    void ReplaceSetField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
+    // Add some new fields from message2 to a repeated field in message1.
+    void CrossoverAddRepeatedField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
+    // Add some new simple fields from message2 to the corresponding unset fields in message1.
+    void CrossoverAddUnsetField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
 }  // namespace protobuf_mutator
 
 #endif  // SRC_MUTATE_UTIL_H_

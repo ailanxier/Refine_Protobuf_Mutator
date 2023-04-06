@@ -109,21 +109,13 @@ enum DecryptionNoiseMode {
     NOISE_FLOODING_DECRYPT = 1;
 }
 
-message RootMsg {
+message OpenFHE_RootMsg {
     FHEParameter param = 1;
     EvalData evalData = 2;
     APISequence apiSequence = 3;
 }
 
 message FHEParameter {
-    message Onem {
-        int32 cc = 1;
-    }
-    oneof testone{
-        int32 a = 27;
-        double b = 11;
-        Onem onem = 13;
-    }
     uint32                  multiplicativeDepth     = 1;
     uint64                  plaintextModulus        = 2;
     // max batch size of messages to be packed in encoding (number of slots)

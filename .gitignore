@@ -87,3 +87,5 @@ vuln
 *.txt
 !CMakeLists.txt
 !afl_test/Makefile
+
+*.png

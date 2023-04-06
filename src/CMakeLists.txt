@@ -3,6 +3,7 @@
 set(LIBAFLPM_SRC afl_mutator.cpp)
 add_library(aflpm STATIC ${LIBAFLPM_SRC})
 target_link_libraries(aflpm protobuf-mutator)
+target_include_directories(aflpm PUBLIC proto)
 # target_link_libraries(aflpm Fuzzer)
 
 add_subdirectory(proto)
