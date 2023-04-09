@@ -119,7 +119,7 @@ message FHEParameter {
     uint32                  multiplicativeDepth     = 1;
     uint64                  plaintextModulus        = 2;
     // max batch size of messages to be packed in encoding (number of slots)
-    uint32                  batchSize               = 3;
+    optional uint32         batchSize               = 3;
     /*
      * The digit size is only used in BV key switching and it allows us to perform digit decomposition at a finer 
      * granularity. Under normal circumstances, digit decomposition is what we call RNS decomposition, i.e., 
@@ -132,7 +132,7 @@ message FHEParameter {
      */    
     uint32                  digitSize               = 4;
     float                   standardDeviation       = 5;
-    SecretKeyDist           secretKeyDist           = 6;
+    optional SecretKeyDist  secretKeyDist           = 6;
     // Max relinearization degree of secret key polynomial (used for lazy relinearization)
     int32                   maxRelinSkDeg           = 7;
     KeySwitchTechnique      ksTech                  = 8;

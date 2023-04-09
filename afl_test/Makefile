@@ -1,6 +1,6 @@
 CXX=clang++-14
 AFLCC=afl-cc -fprofile-arcs -ftest-coverage
-PB_SRC=../src/proto/fhe.pb.cc
+PB_SRC=../proto/openfhe_ckks.pb.cc
 PROTOBUF_DIR=/usr/local/include/google/protobuf
 PROTOBUF_LIB=/usr/local/lib/libprotobuf.so
 

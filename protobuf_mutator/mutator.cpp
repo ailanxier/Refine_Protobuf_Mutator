@@ -3,7 +3,6 @@ namespace protobuf_mutator {
     using std::placeholders::_1;
     void restoreMutationBitset(MutationBitset& b) { b.reset(); b.set((int)FieldMuationType::None);}
     void restoreCrossoverBitset(CrossoverBitset& b) { b.reset(); b.set((int)CrossoverType::None);}
-
     inline string DebugEnumStr(FieldMuationType type){
         switch (type){
             case FieldMuationType::MutationAdd:
@@ -27,6 +26,32 @@ namespace protobuf_mutator {
                 return "      CrossoverAdd";
             default:
                 return "      None";
+        }
+    }
+    
+    #define DEBUG_PRINT 0
+    inline void printMutation(FieldMuationType mutationType, const FieldDescriptor* field, const Message* msg){
+        if(DEBUG_PRINT){
+            cout.fill(' ');
+            string name;
+            if(auto oneof = field->containing_oneof()){
+                if(auto now_field = msg->GetReflection()->GetOneofFieldDescriptor(*msg, oneof)){
+                    name = now_field->name();
+                }else name = field->full_name() + "(undefine)";
+            }else name = field->name();
+            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(mutationType)<<std::endl;
+        }
+    }
+    inline void printCrossover(CrossoverType crossoverType, const FieldDescriptor* field, const Message* msg){
+        if(DEBUG_PRINT){
+            cout.fill(' ');
+            string name;
+            if(auto oneof = field->containing_oneof()){
+                if(auto now_field = msg->GetReflection()->GetOneofFieldDescriptor(*msg, oneof)){
+                    name = now_field->name();
+                }else name = field->full_name() + "(undefine)";
+            }else name = field->name();
+            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(crossoverType)<<std::endl;
         }
     }
 
@@ -58,7 +83,8 @@ namespace protobuf_mutator {
                         MUTATION_ADD;
                         TRY_MUTATE_FIELD;
                     }else{
-                        MUTATION_DELETE;
+                        // do not delete oneof field
+                        // MUTATION_DELETE;
                         MUTATION_MUTATE;
                         TRY_MUTATE_FIELD;
                     }
@@ -103,8 +129,8 @@ namespace protobuf_mutator {
         
         FieldMuationType mutationType = (FieldMuationType)pos;
         auto ref = msg->GetReflection();
-        //cout.fill(' ');
-        //cout<<std::right<<std::setw(30)<<field->name()<<" "<<DebugEnumStr(mutationType)<<std::endl;
+        if(mutationType >= FieldMuationType::None) return;
+        printMutation(mutationType, field, msg);
         switch (mutationType){
             case FieldMuationType::MutationAdd:
                 if(field->is_repeated())
@@ -124,9 +150,10 @@ namespace protobuf_mutator {
                 else{
                     if(auto oneof = field->containing_oneof()){
                         auto old_oneField = ref->GetOneofFieldDescriptor(*msg, oneof);
-                        MutateSetField(msg, field, remain_size);
+                        int old_index = old_oneField->index_in_oneof();
+                        MutateSetField(msg, old_oneField, remain_size);
                         // If the index does not change, then mutate the field itself 
-                        if(old_oneField == ref->GetOneofFieldDescriptor(*msg, oneof) && IsMessageType(old_oneField))
+                        if(old_index == ref->GetOneofFieldDescriptor(*msg, oneof)->index_in_oneof() && IsMessageType(old_oneField))
                             MessageMutation(ref->MutableMessage(msg, old_oneField), remain_size);
                     }else
                         MutateSetField(msg, field, remain_size);
@@ -219,11 +246,12 @@ namespace protobuf_mutator {
         for(int i = 0; i < order; i++)
             pos = allowed_crossovers._Find_next(pos);
         CrossoverType crossoverType = (CrossoverType)pos;
-        //cout.fill(' ');
-        //cout<<std::right<<std::setw(30)<<field1->name()<<" "<<DebugEnumStr(crossoverType)<<endl;
-        allowed_crossovers.reset();
+        if(crossoverType >= CrossoverType::None)
+            return;
         auto ref1 = msg1->GetReflection();
         auto ref2 = msg2->GetReflection();
+        printCrossover(crossoverType, field1, msg1);
+        allowed_crossovers.reset();
         switch (crossoverType){
             case CrossoverType::Replace:
                 if(field1->is_repeated())

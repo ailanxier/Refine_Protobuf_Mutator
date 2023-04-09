@@ -45,7 +45,7 @@ namespace protobuf_mutator {
                 if(field->index_in_oneof() != 0) continue;
                 auto new_field = oneof_desc->field(GetRandomIndex(oneof_desc->field_count() - 1));
                 if(IsMessageType(new_field)){
-                    auto new_msg = ref->MutableMessage(msg, new_field)->New();
+                    auto new_msg = ref->GetMessage(*msg, new_field).New();
                     remain_size -= GetMessageSize(new_msg);
                     createRandomMessage(new_msg, remain_size);
                     ref->SetAllocatedMessage(msg, new_msg, new_field);
@@ -59,8 +59,8 @@ namespace protobuf_mutator {
     void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size){
         auto ref = msg->GetReflection();
         auto oldLen = ref->FieldSize(*msg, field);
-        // newLen in [0, MAX_NEW_REPEATED_SIZE]
-        auto newLen = GetRandomIndex(MAX_NEW_REPEATED_SIZE);
+        // newLen in [1, MAX_NEW_REPEATED_SIZE]
+        auto newLen = GetRandomNum(1, MAX_NEW_REPEATED_SIZE);
         auto max_size = GetMessageSize(msg) + remain_size;
         for(int i = 1; i <= newLen; i++){
             // add random field
@@ -102,7 +102,6 @@ namespace protobuf_mutator {
             }
             // check size
             remain_size = max_size - GetMessageSize(msg);
-            // std::cout<<"remain_size: "<<remain_size<<std::endl;
             if(remain_size < 0) {
                 ref->RemoveLast(msg, field);
                 remain_size = max_size - GetMessageSize(msg);
@@ -118,7 +117,7 @@ namespace protobuf_mutator {
         if(auto oneof_desc = field->containing_oneof()){
             auto new_field = oneof_desc->field(GetRandomIndex(oneof_desc->field_count() - 1));
             if(IsMessageType(new_field)){
-                auto new_msg = ref->MutableMessage(msg, new_field)->New();
+                auto new_msg = ref->GetMessage(*msg, new_field).New();
                 remain_size -= GetMessageSize(new_msg);
                 createRandomMessage(new_msg, remain_size);
                 ref->SetAllocatedMessage(msg, new_msg, new_field);
@@ -186,7 +185,7 @@ namespace protobuf_mutator {
     }
     
     void DeleteSetField(Message* msg, const FieldDescriptor* field, int& remain_size){
-        //if(randomIndex(DELETE_PROBABILITY) != 0) return;
+        if(!CanDelete()) return;
         auto ref = msg->GetReflection();
         auto type = field->cpp_type();
         auto max_size = GetMessageSize(msg) + remain_size;
@@ -280,7 +279,7 @@ namespace protobuf_mutator {
                     auto now = ref->GetRepeatedEnumValue(*msg, field, i);
                     auto temp = now;
                     mutate(&now);
-                    now %= field->enum_type()->value_count();
+                    NotNegMod(now, field->enum_type()->value_count());
                     ref->SetRepeatedEnumValue(msg, field, i, now);
                     if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedEnumValue(msg, field, i, temp);
                 }              
@@ -298,15 +297,15 @@ namespace protobuf_mutator {
         auto max_size = GetMessageSize(msg) + remain_size;
         // Special judgment for oneof fields
         if(auto oneof_desc = field->containing_oneof()){
-            int index = ref->GetOneofFieldDescriptor(*msg, oneof_desc)->index();
+            int index = field->index_in_oneof();
             int newIndex = index;
             mutate(&newIndex);
-            newIndex %= oneof_desc->field_count();
+            NotNegMod(newIndex, oneof_desc->field_count());
             // If the index does not change, then mutate the field itself
             if(index == newIndex) return;
             auto new_field = oneof_desc->field(newIndex);
             if(IsMessageType(new_field)){
-                auto new_msg = ref->MutableMessage(msg, new_field)->New();
+                auto new_msg = ref->GetMessage(*msg, new_field).New();
                 // XXX: Unable to get the byte size of the field
                 createRandomMessage(new_msg, remain_size);
                 ref->SetAllocatedMessage(msg, new_msg, new_field);
@@ -369,7 +368,7 @@ namespace protobuf_mutator {
                 auto now = ref->GetEnumValue(*msg, field);
                 auto temp = now;
                 mutate(&now);
-                now %= field->enum_type()->value_count();
+                NotNegMod(now, field->enum_type()->value_count());
                 ref->SetEnumValue(msg, field, now);     
                 if(max_size - GetMessageSize(msg) < 0) ref->SetEnumValue(msg, field, temp);                   
                 break;
@@ -464,7 +463,7 @@ namespace protobuf_mutator {
         vector<int> idx1(len1);
         for(int i = 0; i < len1; i++) idx1[i] = i;
         shuffle(idx1.begin(), idx1.end(), getRandEngine()->randLongEngine);
-        auto cnt = GetRandomIndex(len1 - 1);
+        auto cnt = GetRandomIndex(min(len1 - 1, MAX_REPLACE_REPEATED_SIZE));
         for(int i = 0; i < cnt; i++){
             auto idx2 = GetRandomIndex(len2 - 1);
             switch (field1->cpp_type()){

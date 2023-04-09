@@ -4,9 +4,9 @@
 #include "proto_util.h"
 namespace protobuf_mutator {
     #define MAX_NEW_REPEATED_SIZE 5
+    #define MAX_REPLACE_REPEATED_SIZE 5
     // 1 / DELETE_PROBABILITY
-    #define DELETE_PROBABILITY 3 
-    
+    #define DELETE_PROBABILITY 4 
     #define MUTATE_PROBABILITY 3 
     
     using std::min;
@@ -78,7 +78,7 @@ namespace protobuf_mutator {
     inline bool IsMessageType(const FieldDescriptor* field) {return field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE;}
     // XXX: only for small message
     inline int  GetMessageSize(const Message* msg) {return (int)msg->ByteSizeLong();}
-
+    inline void NotNegMod(int& a, const int mod) { a = (a % mod + mod) % mod; }
     // ----------------------Mutate functions------------------------
     // recursive create a message with random value
     void createRandomMessage(Message* msg, int& remain_size);

@@ -125,10 +125,6 @@ namespace protobuf_mutator {
     };
 }  // namespace protobuf_mutator
 
-//  int GetMaxSize(const InputReader& input, const OutputWriter& output, const Message& message) {
-//   int max_size = message.ByteSizeLong() + output.size();
-//   max_size -= std::min(max_size, input.size());
-//   return max_size;
-//   return output.size();
+
 // }
 #endif  // SRC_LIBFUZZER_LIBFUZZER_MACRO_H_
