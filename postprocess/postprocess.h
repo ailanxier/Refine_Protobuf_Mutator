@@ -8,7 +8,6 @@
 // #define INITIAL_SIZE (500)
 #define MAX(x, y) ( ((x) > (y)) ? (x) : y )
 #define USE_BINARY_PROTO true
-using namespace protobuf_mutator;
 
 // Embedding buf_ in class MutateHelper here to prevent memory fragmentation caused by frequent memory allocation.
 class AFLCustomHepler {
