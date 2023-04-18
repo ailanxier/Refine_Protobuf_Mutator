@@ -84,7 +84,7 @@ afl_test/out/
 *.gcda
 *.gcno
 vuln
-*.txt
+!proto_seed/afl_test_in/**/*.txt
 !CMakeLists.txt
 !afl_test/Makefile
 proto_seed/in/

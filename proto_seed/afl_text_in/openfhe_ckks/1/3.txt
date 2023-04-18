@@ -1,0 +1,107 @@
+param {
+  multiplicativeDepth: 3
+  plaintextModulus: 587523038455891945
+  batchSize: 8
+  digitSize: 23
+  standardDeviation: 0.617955506
+  secretKeyDist: SPARSE_TERNARY
+  maxRelinSkDeg: 1215460562
+  ksTech: HYBRID
+  scalTech: FLEXIBLEAUTO
+  firstModSize: 50
+  scalingModSize: 53
+  evalAddCount: 557201142
+  keySwitchCount: 1499048256
+  multiplicationTechnique: HPSPOVERQLEVELED
+  multiHopModSize: 3399069770
+  PREMode: NOT_SET
+  noiseEstimate: 0.435445
+  desiredPrecision: 0.1434566646363878
+  statisticalSecurity: 1.234453554345
+  multipartyMode: FIXED_NOISE_MULTIPARTY
+  FHE: true
+  rotateIndexes: -1657
+}
+evalData {
+  allDataLists {
+    dataList: 0.37323959739928569
+    dataList: 0.9005866740577535
+    dataList: -0.04088085803744157
+  }
+  allDataLists {
+    dataList: 0.34791857505973978
+    dataList: -0.93601109804913807
+    dataList: 0.51845923311002751
+    dataList: -0.53648734497867445
+    dataList: 0.077327775538947652
+  }
+  allDataLists {
+    dataList: 0.83046827293475989
+    dataList: 0.8660418932150431
+    dataList: -0.31993351838087514
+    dataList: 1
+    dataList: -0.766886892037987
+    dataList: -0.48180712112437984
+  }
+  allDataLists {
+    dataList: -0.28568471763015224
+    dataList: 0.80910968355283353
+    dataList: 0.29642852004911013
+    dataList: -0.95240383003115237
+    dataList: 0.81518971020854769
+  }
+  allDataLists {
+    dataList: 0.73273580459776122
+    dataList: -0.563173612556436
+    dataList: 0.089806821244849733
+    dataList: 0.26905423605907397
+    dataList: 0.92304460747232842
+  }
+}
+apiSequence {
+  apiList {
+    mulConstant {
+      src: 3
+      num: -0.57754911590844271
+    }
+    dst: 2
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 1
+      srcs: 4
+      srcs: 0
+      srcs: 4
+      srcs: 4
+      weights: 0.44887613756003808
+      weights: -0.93993239696573772
+      weights: -0.29953399037723927
+      weights: -0.1358650026067475
+      weights: -0.49418981749511937
+    }
+  }
+  apiList {
+    mulTwoList {
+      src1: 3
+      src2: 4
+    }
+    dst: 4
+  }
+  apiList {
+    mulConstant {
+      src: 4
+      num: 0.39431179126344129
+    }
+    dst: 4
+  }
+  apiList {
+    mulManyList {
+      srcs: 0
+      srcs: 1
+      srcs: 4
+      srcs: 2
+      srcs: 4
+    }
+    dst: 2
+  }
+}

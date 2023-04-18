@@ -1,0 +1,132 @@
+param {
+  multiplicativeDepth: 4
+  plaintextModulus: 2934526959775007969
+  batchSize: 8
+  digitSize: 11
+  standardDeviation: -0.0864656121
+  secretKeyDist: UNIFORM_TERNARY
+  maxRelinSkDeg: 2824328201
+  scalTech: FLEXIBLEAUTO
+  firstModSize: 60
+  evalAddCount: 1540148440
+  keySwitchCount: 4257934128
+  multiplicationTechnique: HPS
+  multiHopModSize: 776206868
+  PREMode: NOT_SET
+  multipartyMode: NOISE_FLOODING_MULTIPARTY
+  noiseEstimate: 43289240370
+  desiredPrecision: 12344346363878
+  statisticalSecurity: 2344535345
+  numAdversarialQueries: 12897453453
+  rotateIndexes: -15181
+  rotateIndexes: -203
+  rotateIndexes: 13963
+  rotateIndexes: 15103
+}
+evalData {
+  allDataLists {
+    dataList: -0.694898775009466
+    dataList: 0.15705823619780612
+    dataList: -0.072060421129812147
+  }
+  allDataLists {
+    dataList: -0.45732046432063145
+    dataList: 0.061924576792923514
+    dataList: 0.0619435
+    dataList: 0.80424417444625385
+    dataList: 0.47734041943354844
+    dataList: -0.96616137914707945
+  }
+  allDataLists {
+    dataList: -0.005410644440485779
+    dataList: 0.73441141150807066
+    dataList: -0.74100201695847656
+    dataList: 0.95522976264705539
+    dataList: -0.51116766205455422
+  }
+  allDataLists {
+    dataList: 0.68352176259000541
+    dataList: 0.8680403315348213
+    dataList: 0.9449514349864363
+    dataList: 0.96643921141663247
+    dataList: 0.44064302071900108
+    dataList: 0.44064302071900108
+    dataList: 0.44064302071900108
+  }
+  allDataLists {
+    dataList: -0.65072479004882988
+    dataList: -0.64006042933325458
+    dataList: -0.30039624503029316
+    dataList: 0.4347511526210921
+  }
+  allDataLists {
+    dataList: -1
+    dataList: 1
+    dataList: -0.43535345
+    dataList: 0.9779899
+  }
+}
+apiSequence {
+  apiList {
+    linearWeightedSum {
+      srcs: 5
+      srcs: 2
+      srcs: 3
+      srcs: 1
+      srcs: 3
+      weights: -0.24459669371035464
+      weights: -0.89463914305358239
+      weights: -0.050322917571429704
+      weights: 0.10618919822113715
+      weights: -0.61500245403306986
+    }
+  }
+  apiList {
+    rotateOneList {
+      index: 13963
+    }
+    dst: 5
+  }
+  apiList {
+    addManyList {
+      srcs: 2
+      srcs: 5
+      srcs: 1
+      srcs: 2
+      srcs: 2
+    }
+    dst: 2
+  }
+  apiList {
+    rotateOneList {
+      src: 2
+      index: 15103
+    }
+  }
+  apiList {
+    addManyList {
+      srcs: 2
+      srcs: 2
+      srcs: 1
+      srcs: 1
+      srcs: 3
+    }
+    dst: 4
+  }
+  apiList {
+    mulManyList {
+      srcs: 4
+      srcs: 3
+      srcs: 0
+      srcs: 1
+      srcs: 5
+    }
+    dst: 4
+  }
+  apiList {
+    rotateOneList {
+      src: 5
+      index: -203
+    }
+  }
+}

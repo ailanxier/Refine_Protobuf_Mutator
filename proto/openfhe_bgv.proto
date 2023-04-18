@@ -1,11 +1,10 @@
 syntax = "proto3";
 package OpenFHE;
 
-// modes for RLWE schemes, such as BGV and BFV
 enum SecretKeyDist {
-    GAUSSIAN        = 0;
-    UNIFORM_TERNARY = 1;
-    SPARSE_TERNARY  = 2;
+    GAUSSIAN                    = 0;
+    UNIFORM_TERNARY             = 1;
+    SPARSE_TERNARY              = 2;
 }
 /*
 * Rescale Operation:
@@ -19,109 +18,406 @@ enum SecretKeyDist {
 * working with big numbers and we only work with native integers. One complication that arises
 * from this is that we can only rescale by dividing by certain prime numbers and not D=2^p.
 *
-* ways to deal with this:
+* Ways to deal with this:
 * 1.FIXEDMANUAL: choose prime numbers as close to 2^p as possible, and assume that the scaling factor 
-* remains the same. This inevitably incurs some approximation error. 
-* 2.FLEXIBLEAUTO: track how the scaling factor changes and try to adjust for it.
+* remains the same. This inevitably incurs some approximation error. Need to use rescale() manually.
+* 
+* 2.FLEXIBLEAUTO: track how the scaling factor changes and try to adjust for it. It automatically performs
+* rescaling before every multiplication. It tracks the exact scaling factor of all ciphertexts.This means that 
+* computations in FLEXIBLEAUTO will be more accurate than the same computations in FIXEDMANUAL. Keep in mind that
+* this difference only becomes apparent when dealing with computations of large multiplicative depth; this
+* is because a large multiplicative depth means we need to find more prime numbers sufficiently close to D=2^p, 
+* and this becomes harder and harder as the multiplicative depth increases.
+* 
 * 3.FIXEDAUTO: an automated version of FIXEDMANUAL that does all rescaling automatically.it hides all 
 * the nuances of tracking the depth of ciphertexts and having to call the rescale operation. Therefore,
 * FIXEDAUTO is more appropriate for users. On the contrary, FIXEDMANUAL is more appropriate for 
 * production applications that have been optimized by experts.
+* 
+* In CKKS, ciphertexts are defined versus a large ciphertext modulus Q. Whenever we rescale a ciphertext, 
+* its ciphertext modulus becomes smaller too. All homomorphic operations require that their inputs are
+* defined over the same ciphertext modulus, and therefore, we need to adjust one of them if their 
+* ciphertext moduli do not match. The way this is done in the original CKKS paper is through an operation 
+* called Modulus Switch. In our implementation, we call this operation LevelReduce, and both FIXEDMANUAL 
+* and FIXEDAUTO do it automatically.
 *
 */
 enum ScalingTechnique {
-    FIXEDMANUAL          = 0;
-    FIXEDAUTO            = 1;
-    FLEXIBLEAUTO         = 2;
-    FLEXIBLEAUTOEXT      = 3;
-    NORESCALE            = 4;
-    INVALID_RS_TECHNIQUE = 5;
+    FIXEDMANUAL                 = 0;
+    FIXEDAUTO                   = 1;
+    FLEXIBLEAUTO                = 2;
+    FLEXIBLEAUTOEXT             = 3;
+    NORESCALE                   = 4;
+    INVALID_RS_TECHNIQUE        = 5;
 };
 
-enum KeySwitchTechnique {
-    INVALID_KS_TECH = 0;
-    BV              = 1;
-    HYBRID          = 2;
+/*
+ * For BV we do not have extra modulus, so the security depends on ciphertext modulus Q
+ * For BV we need digitSize - digit size in digit decomposition
+ * For HYBRID we do have extra modulus P, so the security depends on modulus P*Q
+ * For HYBRID we need numLargeDigits - number of digits in digit decomposition
+ * For most cases, HYBRID will be the most appropriate and efficient key switching technique
+ * 
+ * In RNS implementation of CKKS, every ciphertext corresponds to a large number (which is represented as 
+ * small integers in RNS) modulo a ciphertext modulus Q, which is defined as the product of
+ * (multDepth + 1) prime numbers: Q = q0 * q1 * ... * qL. Each qi is selected to be close to the scaling factor 
+ * D=2^p, hence the total size of Q is approximately: sizeof(Q) = (multDepth + 1) * scaleModSize
+ *
+ * HYBRID key switching takes a number d that's defined modulo Q, and performs 4 steps:
+ * 1 - Digit decomposition:
+ *     Split d into numLargeDigits digits - the size of each digit is roughly ceil(sizeof(Q) / numLargeDigits)
+ * 2 - Extend ciphertext modulus from Q to Q*P. Here P is a product of special primes
+ * 3 - Multiply extended component with key switching key
+ * 4 - Decrease the ciphertext modulus back down to Q
+ *
+ * It's not necessary to understand how all these stages work, as long as it's clear that the size of the 
+ * ciphertext modulus is increased from sizeof(Q) to sizeof(Q) + sizeof(P) in stage 2. P is always set to be as 
+ * small as possible, as long as sizeof(P) is larger than the size of the largest digit, i.e., than
+ * ceil(sizeof(Q) / numLargeDigits). Therefore, the size of P is inversely related to the number of digits, 
+ * so the more digits we have, the smaller P has to be.
+ *
+ * The tradeoff here is that more digits means that the digit decomposition stage becomes more expensive, 
+ * but the maximum size of the ciphertext modulus Q*P becomes smaller. Since the size of Q*P determines 
+ * the necessary ring dimension to achieve a certain security level, more digits can in some
+ * cases mean that we can use smaller ring dimension and get better performance overall.
+ *
+ */
+ enum KeySwitchTechnique {
+    INVALID_KS_TECH             = 0;
+    BV                          = 1;
+    HYBRID                      = 2;
 };
-
+/* 
+ * "NotSet": run more quickly with a smaller ring dimension. Note that this should be used only in
+ * non-production environments, or by experts who understand the security implications of their choices. 
+ * In production-like environments, we recommend using HEStd_128_classic, HEStd_192_classic, 
+ * or HEStd_256_classic for 128-bit, 192-bit, or 256-bit security, respectively. 
+ * If you choose one of these as your security level, you do not need to set the ring dimension.
+ */
 enum SecurityLevel {
-    HEStd_128_classic = 0;
-    HEStd_192_classic = 1;
-    HEStd_256_classic = 2;
-    HEStd_NotSet      = 3;
+    HEStd_128_classic           = 0;
+    HEStd_192_classic           = 1;
+    HEStd_256_classic           = 2;
+    HEStd_NotSet                = 3;
 };
 
+// STANDARD or EXTENDED mode for BFV encryption
+// EXTENDED slightly reduces the size of Q (by few bits) but makes encryption somewhat slower
 enum EncryptionTechnique {
-    STANDARD = 0;
-    EXTENDED = 1;
+    STANDARD                    = 0;
+    EXTENDED                    = 1;
 };
 
 enum MultiplicationTechnique {
-    BEHZ             = 0;
-    HPS              = 1;
-    HPSPOVERQ        = 2;
-    HPSPOVERQLEVELED = 3;
+    BEHZ                        = 0;
+    HPS                         = 1;
+    HPSPOVERQ                   = 2;
+    HPSPOVERQLEVELED            = 3;
 };
 
 enum ProxyReEncryptionMode {
-    NOT_SET              = 0;
-    INDCPA               = 1;
-    FIXED_NOISE_HRA      = 2;
-    NOISE_FLOODING_HRA   = 3;
-    DIVIDE_AND_ROUND_HRA = 4;
+    NOT_SET                     = 0;
+    INDCPA                      = 1;
+    FIXED_NOISE_HRA             = 2;
+    NOISE_FLOODING_HRA          = 3;
+    DIVIDE_AND_ROUND_HRA        = 4;
 }
+
 enum ExecutionMode {
-    EXEC_EVALUATION       = 0;
-    EXEC_NOISE_ESTIMATION = 1;
+    EXEC_EVALUATION             = 0;
+    EXEC_NOISE_ESTIMATION       = 1;
 };
 
 enum DecryptionNoiseMode {
-    FIXED_NOISE_DECRYPT    = 0;
-    NOISE_FLOODING_DECRYPT = 1;
+    FIXED_NOISE_DECRYPT         = 0;
+    NOISE_FLOODING_DECRYPT      = 1;
+}
+
+// NOISE_FLOODING_MULTIPARTY is more secure than FIXED_NOISE_MULTIPARTY.
+enum MultipartyMode {
+    INVALID_MULTIPARTY_MODE     = 0;
+    FIXED_NOISE_MULTIPARTY      = 1;
+    NOISE_FLOODING_MULTIPARTY   = 2;
+};
+
+message OpenFHE_RootMsg {
+    FHEParameter param          = 1;
+    EvalData evalData           = 2;
+    APISequence apiSequence     = 3;
 }
 
 message FHEParameter {
-    uint32                  multiplicativeDepth     = 1;
-    uint64                  plaintextModulus        = 2;
-    // max batch size of messages to be packed in encoding (number of slots)
-    uint32                  batchSize               = 3;
     /*
-    * The digit size is only used in BV key switching and it allows us to perform digit decomposition * at a finer granularity. Under normal circumstances, digit decomposition is what we call
-    * RNS decomposition, i.e., each digit is roughly the size of the qi's that comprise the 
-    * ciphertext modulus Q. When using BV, in certain cases like having to perform rotations 
-    * without any preceding multiplication, we need to have smaller digits to prevent noise 
-    * from corrupting the result. In this case, using digitSize = 10 does the trick. 
-    * set this to 0 (i.e., RNS decomposition) and see how the results are incorrect.
+     * Default: 1
+     * Range: [3, 5] (TEST: for efficiency)
+     * Detail:
+     * The maximum possible depth of a given multiplication, but not the total number of multiplications
+     * 
+     * For example, computation f(x, y) = x^2 + x*y + y^2 + x + y has a multiplicative depth of 1, 
+     * but requires a total of 3 multiplications.
+     * computation g(x_i) = x1*x2*x3*x4 can be implemented either as a computation of multiplicative depth 3 as
+     * g(x_i) = ((x1*x2)*x3)*x4, or as a computation of multiplicative depth 2 as g(x_i) = (x1*x2)*(x3*x4).
+     * 
+     * too small multiplicativeDepth will cause wrong answer
+     */
+    optional uint32                     multiplicativeDepth       = 1;
+    /*
+     * Default: 0 (not valid and must set manually)
+     * Range: [2, 1e5]
+     * dependency: multiplicativeDepth, ringDim, etc.
+     * Detail: 
+     * 1. P must be a prime
+     * 2. Must satisfy the condition: (P-1)/m is an integer, where m is cyclotomic number 
+     * However, cyclotomic number can't be directly assessed.(XXX)
     */
-    uint32                  digitSize               = 4;
-    float                   standardDeviation       = 5;
-    SecretKeyDist           secretKeyDist           = 6;
-    int32                   maxRelinSkDeg           = 7;
-    KeySwitchTechnique      ksTech                  = 8;
-    ScalingTechnique        scalTech                = 9;
-    uint32                  firstModSize            = 10;
-    uint32                  numLargeDigits          = 12;
-    uint32                  scalingModSize          = 14;
-    SecurityLevel           securityLevel           = 15;
-    uint32                  ringDim                 = 16;
-    uint32                  evalAddCount            = 17;
-    uint32                  keySwitchCount          = 18;
-    EncryptionTechnique     encryptionTechnique     = 19;
-    MultiplicationTechnique multiplicationTechnique = 20;
-    uint32                  multiHopModSize         = 21;
-    ProxyReEncryptionMode   PREMode                 = 22;
-    ExecutionMode           executionMode           = 24;
-    DecryptionNoiseMode     decryptionNoiseMode     = 25;
-    double                  noiseEstimate           = 26;
-    double                  desiredPrecision        = 27;
-    double                  statisticalSecurity     = 28;
-    double                  numAdversarialQueries   = 29;
+    uint64                              plaintextModulus          = 2;
+    /*
+     * Default: 0
+     * Range: [0, ringDim], ringDim can't be directly assessed
+     * Loose restriction: [0, 2048]
+     * Detail:
+     * 1. The maximum batch size of messages to be packed in encoding (number of slots)
+     * 2. Only be set to zero (for full packing = ring dimension) or a power of two.
+     * 3. Seems not relevant to BGV
+     */ 
+    optional uint32                     batchSize                 = 3;
+     /* 
+     * Default: 0
+     * Range: [10, 30] (TEST)
+     * Dependency: KeySwitchTechnique = BV
+     * Detail:
+     * 1.The digit size is only used in BV key switching and it allows us to perform digit decomposition at a finer 
+     * granularity. Under normal circumstances, digit decomposition is what we call RNS decomposition, i.e., 
+     * each digit is roughly the size of the qi's that comprise the ciphertext modulus Q. When using BV, 
+     * in certain cases like having to perform rotations without any preceding multiplication, we need to have 
+     * smaller digits to prevent noise from corrupting the result. In this case, using digitSize = 10 does the  
+     * trick. set this to 0 (i.e., RNS decomposition) and see how the results are incorrect.
+     * 
+     * 2. decrease digitSize to see the accuracy increase, and performance decrease
+     * 3. PREMode = NOISE_FLOODING_HRA && KeySwitching = HIBIRD => digitSize = 0
+     * 4. Larger digitSize will get incorrect results in multiplication and rotation 
+     */
+    uint32                              digitSize                 = 4;
+    /*
+     * Default: 3.19
+     * Loose restrictions: [0, 10]
+     * Detail:
+     * used for Gaussian error generation
+     * TEST: negative value will time out with other secretKeyDist
+     */    
+    optional float                      standardDeviation         = 5;
+    /*
+     * Default: UNIFORM_TERNARY
+     */
+    optional SecretKeyDist              secretKeyDist             = 6;
+    /*
+     * Default: 2
+     * Range: seems not relevant
+     * Detail:
+     * 1. Max relinearization degree of secret key polynomial (used for lazy relinearization)
+     * This controls how many multiplications are possible without rescaling.
+     * The number of multiplications (maxRelinSkDeg) is maxDepth - 1.
+     * 2. This is useful for an optimization technique called lazy re-linearization 
+     * (only applicable in FIXEDMANUAL, as FLEXIBLEAUTO implements automatic rescaling).
+     */    
+    optional uint32                     maxRelinSkDeg             = 7;
+    /*
+     * Default: HYBRID
+     * Detail:
+     * 1. For BV we need digitSize - digit size in digit decomposition
+     * 2. For HYBRID we need numLargeDigits - number of digits in digit decomposition
+     * 3. can't not be INVALID_KS_TECH
+     */
+    optional KeySwitchTechnique         ksTech                    = 8;
+    /*
+     * Default: FLEXIBLEAUTOEXT
+     * Detail: (in enum definition)
+     * TEST: FIXEDMANUAL: use rescale() manually, not use for now.
+     *       NORESCALE: no rescale, not use for now.
+     *       only FLEXIBLEAUTOEXT can use for now in BGV !!!
+     */
+    // optional ScalingTechnique           scalTech                  = 9;
+    // TEST: wait for response, set to 0 for now
+    uint32                              firstModSize              = 10;
+    uint32                              scalingModSize            = 11;
+    /*
+     * Default: 0
+     * Range: [0, 3] (TEST: 0 for more valid cases)
+     * dependency: ScalingTechnique = HYBRID
+     * Detail: (in enum definition)
+     * 1. the number of digits in HYBRID key switching
+     * 2. zero will be set to default value according to multiplicative depth
+     * 3. condition: sizeQ - ceil(sizeQ / numPartQ) * (numPartQ - 1) > 0, where sizeQ can't be directly assessed
+     */
+    uint32                              numLargeDigits            = 12;
+    /* 
+     * TEST: 
+     * Default: HEStd_128_classic
+     */
+    SecurityLevel                       securityLevel             = 13;
+    /*
+     * TEST:
+     * Default: 0
+     * dependency: securityLevel (if not set securityLevel, ringDim will be set)
+     * Detail:
+     * 1. Ring dimension N of the scheme : the ring is Z_Q[x] / (X^N+1)
+     * 2. Set to 0 to let the library choose it based on securityLevel
+     * 3. If securityLevel is not set, ringDim must be set
+     */
+    uint32                              ringDim                   = 14;
+    /*
+     * Default: 5
+     * Loose restrictions: [0, 20]
+     * Detail:
+     * 1. the maximum number of additions per level.
+     * 2. used for setting noise in BGV and BFV
+     */
+    optional uint32                     evalAddCount              = 15;
+    /*
+     * Default: 3
+     * Loose restrictions: [0, 1e4]
+     * Detail:
+     * the maximum number of key switches per level.
+     */
+    optional uint32                     keySwitchCount            = 16;
+    /*
+     * TEST:
+     * Default: STANDARD
+     * Detail: (in enum definition)
+     * 1. just for BFV
+     * 2. BGV use KeySwitchTechnique = BV and encryptionTechnique = EXTENDED crash (to be confirmed)
+     */
+    EncryptionTechnique                 encryptionTechnique       = 17;
+    // irrelevant for BGV
+    optional MultiplicationTechnique    multiplicationTechnique   = 18;
+    /*
+     * Default: 0
+     * Loose restrictions: [0, 60]
+     * Detail:
+     * the size of moduli used for PRE in the provable HRA setting
+     */
+    uint32                              multiHopModSize           = 19;
+    /*
+     * Default: INDCPA
+     * Detail:
+     * DIVIDE_AND_ROUND_HRA is not supported for BGVRNS
+     * TEST: !!! EncryptionTechnique = EXTENDED && PREMode = NOT_SET => crash (to be confirmed)
+     */
+    optional ProxyReEncryptionMode      PREMode                   = 20;
+    // TEST: It is only used in NOISE_FLOODING_DECRYPT mode
+    double                              noiseEstimate             = 24;
+    // TEST: ignore for 64-bit CKKS (only for 128-bit CKKS)
+    double                              desiredPrecision          = 25;
+    /*
+     * TEST: for CKKS in NOISE_FLOODING_DECRYPT mode. This is the bound on the probability of success
+     * that any adversary can have. Specifically, a probability of success of at most 2^(-statisticalSecurity).
+     * default value is 30
+     */
+    optional double                     statisticalSecurity       = 26;
+    /* 
+     * TEST: Number of adversarial queries a user is expecting for their application in NOISE_FLOODING_DECRYPT mode.
+     */
+    optional double                     numAdversarialQueries     = 27;
+    // Multiparty security mode in BFV/BGV
+    // need to decrease digitSize to keep pecision
+    optional MultipartyMode             multipartyMode            = 21;
     // features supported by public key encryption schemes
-    bool                    PKE                     = 30;
-    bool                    KEYSWITCH               = 31;
-    bool                    PRE                     = 32;
-    bool                    LEVELEDSHE              = 33;
-    bool                    ADVANCEDSHE             = 34;
-    bool                    MULTIPARTY              = 35;
-    bool                    FHE                     = 36;
+    bool                                PRE                       = 30;
+    bool                                MULTIPARTY                = 33;
+    bool                                FHE                       = 34;
+    // PKE, KEYSWITCH, LEVELEDSHE must be supported
+    // bool                                PKE                       = 28;
+    // bool                                KEYSWITCH                 = 29;
+    // bool                                LEVELEDSHE                = 31;
+    // bool                                ADVANCEDSHE               = 32;
+
+    /*
+     * Loose restrictions: [- len, len]
+     * Detail: 
+     * 1. the index of the rotation
+     * 2. BGV rotation is on the ringDim / 2
+     */
+    repeated int32                      rotateIndexes               = 35; 
 }
+
+message EvalData {
+    message OneDataList {
+        repeated int32 dataList                   = 1;
+    }
+    repeated OneDataList allDataLists             = 2;
+}
+
+message APISequence {
+    message OneAPI {
+        message AddTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message AddManyList {
+            repeated uint32 srcs                  = 1;
+        }
+        message SubTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message MulTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message MulManyList {
+            repeated uint32 srcs                  = 1;
+        }
+        message RotateOneList {
+            uint32 src                            = 1;
+            int32 index                           = 2;
+        }    
+        oneof api{
+            AddTwoList addTwoList                 = 1;
+            AddManyList addManyList               = 2;
+            SubTwoList subTwoList                 = 3;
+            MulTwoList mulTwoList                 = 4;
+            MulManyList mulManyList               = 5;
+            RotateOneList rotateOneList           = 6;
+        }
+        uint32 dst                                = 7;
+        // strictly call rescale() in FIXEDMANUAL mode
+        // bool rescale                              = 8;
+    }
+    repeated OneAPI apiList                       = 1;
+}
+
+/* 
+    * Bootstrapping: 
+    * not support for BGV and Serialization
+    * The goal of bootstrapping is to increase the number of available levels we have, or in other words,
+    * to dynamically increase the multiplicative depth. However, the bootstrapping procedure itself
+    * needs to consume a few levels to run. We compute the number of bootstrapping levels required
+    * using GetBootstrapDepth, and add it to levelsUsedBeforeBootstrap to set our initial multiplicative depth.
+    *
+    * We set a budget for the number of levels we can consume in bootstrapping for encoding and decoding, respectively.
+    * Using larger numbers of levels reduces the complexity and number of rotation keys,
+    * but increases the depth required for bootstrapping.
+    * We must choose values smaller than ceil(log2(slots)). A level budget of {4, 4} is good for higher ring
+    * dimensions (65536 and higher).
+    */
+//  uint32                             levelBudget1              = 40;
+//  uint32                             levelBudget2              = 41;
+
+//  // approximate the number of levels bootstrapping will consume to help set initial multiplicative depth.
+//  uint32                             approxBootstrapDepth      = 42;
+    // // irrelevant for BGV, only for CKKS
+    // ExecutionMode                       executionMode             = 22;
+    // // irrelevant for BGV, only for CKKS
+    // DecryptionNoiseMode                 decryptionNoiseMode       = 23;
+    // // irrelevant for BGV
+    // double                              noiseEstimate             = 24;
+    // irrelevant for BGV
+    // optional double                     desiredPrecision          = 25;
+    // irrelevant for BGV
+    // optional double                     statisticalSecurity       = 26;
+    /* 
+     * Number of adversarial queries a user is expecting for their application in NOISE_FLOODING_DECRYPT mode.
+     */
+    // optional double                     numAdversarialQueries     = 27;
+/**
+*/

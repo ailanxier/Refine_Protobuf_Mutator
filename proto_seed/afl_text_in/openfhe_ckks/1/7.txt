@@ -1,0 +1,114 @@
+param {
+  multiplicativeDepth: 4
+  plaintextModulus: 11403213125961164822
+  batchSize: 8
+  digitSize: 29
+  standardDeviation: 0.0996395722
+  secretKeyDist: GAUSSIAN
+  maxRelinSkDeg: 3245222681
+  ksTech: HYBRID
+  scalTech: FIXEDAUTO
+  firstModSize: 53
+  scalingModSize: 44
+  evalAddCount: 2692840573
+  keySwitchCount: 2674065832
+  multiplicationTechnique: BEHZ
+  multiHopModSize: 4079767028
+  PREMode: NOT_SET
+  noiseEstimate: 999999999
+  multipartyMode: INVALID_MULTIPARTY_MODE
+  PRE: true
+  MULTIPARTY: true
+  FHE: true
+  rotateIndexes: -8110
+  rotateIndexes: -4134
+  rotateIndexes: 34543
+}
+evalData {
+  allDataLists {
+    dataList: -0.8286502233904014
+    dataList: 0.73013066615937938
+    dataList: 0.70572159019265546
+    dataList: 0.36406601609444267
+    dataList: 0.7741308516901
+  }
+  allDataLists {
+    dataList: 1.033904014
+    dataList: 0.3245
+    dataList: 0.00000001
+    dataList: 0.73013066615937938
+    dataList: 0.70572159019265546
+    dataList: 0.36406601609444267
+    dataList: 0.7741308516901
+  }
+  allDataLists {
+    dataList: 0.98747179492613979
+    dataList: 0.7455872947965132
+    dataList: -0.59814713163953137
+    dataList: -0.10295859057628054
+    dataList: -0.656601752666805
+  }
+  allDataLists {
+    dataList: -0.41510585552159862
+    dataList: 0.25177514124700218
+    dataList: 0.065772339952609116
+    dataList: -0.12528531823576072
+    dataList: -0.092243692141995126
+  }
+  allDataLists {
+    dataList: 0.26443917732858435
+    dataList: 0.11019326857813261
+    dataList: -0.11586199624320848
+    dataList: 0.54674185127713648
+    dataList: 0.44536635125701451
+  }
+  allDataLists {
+    dataList: -0.16810183504712972
+    dataList: 0.39520404036017576
+    dataList: -0.34348019749938818
+    dataList: -0.29354418636045487
+    dataList: 0.31848733950291086
+  }
+}
+apiSequence {
+  apiList {
+    addTwoList {
+      src1: 5
+      src2: 3
+    }
+    dst: 3
+  }
+  apiList {
+    mulTwoList {
+      src1: 2
+      src2: 4
+    }
+  }
+  apiList {
+    addConstant {
+      src: 1
+      num: -0.39208940925537827
+    }
+    dst: 1
+  }
+  apiList {
+    rotateOneList {
+      src: 4
+      index: -4134
+    }
+    dst: 4
+  }  
+  apiList {
+    rotateOneList {
+      src: 5
+      index: 34543
+    }
+    dst: 1
+  }
+  apiList {
+    subConstant {
+      num: -0.21457233542699905
+    }
+    dst: 4
+  }
+}

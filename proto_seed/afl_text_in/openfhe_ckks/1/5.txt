@@ -1,0 +1,116 @@
+param {
+  multiplicativeDepth: 4
+  plaintextModulus: 15699253732663706961
+  batchSize: 8
+  digitSize: 10
+  standardDeviation: -0.891255856
+  secretKeyDist: SPARSE_TERNARY
+  maxRelinSkDeg: 4236747139
+  ksTech: HYBRID
+  scalTech: FLEXIBLEAUTO
+  firstModSize: 60
+  scalingModSize: 59
+  evalAddCount: 1807054120
+  keySwitchCount: 3369401418
+  multiplicationTechnique: BEHZ
+  multiHopModSize: 705544983
+  PREMode: INDCPA
+  multipartyMode: INVALID_MULTIPARTY_MODE
+  PRE: true
+  MULTIPARTY: true
+  rotateIndexes: 19532
+}
+evalData {
+  allDataLists {
+    dataList: 0.88629766606359994
+    dataList: 0.286939247542086
+    dataList: -0.087428452294323278
+    dataList: -0.94736591455917019
+    dataList: 0.24212265105820974
+  }
+  allDataLists {
+    dataList: 0.29829077454729958
+    dataList: -0.23871297421345683
+    dataList: 0.59401321120311779
+    dataList: -0.5317887041303726
+    dataList: -0.9029131105194772
+  }
+  allDataLists {
+    dataList: 0.54251280901644017
+    dataList: 0.24094546511968984
+    dataList: 0.39943597138029419
+    dataList: 0.80711455348994909
+    dataList: 0.32005753395520165
+  }
+  allDataLists {
+    dataList: -0.38297096047058354
+    dataList: 0.52902234845015772
+    dataList: -0.56270009232403662
+    dataList: -0.46146525978321118
+    dataList: -0.04270414351124463
+  }
+  allDataLists {
+    dataList: 0.21639209946365612
+    dataList: 0.6031355337000468
+    dataList: 0.97047313308610028
+    dataList: 0.67346806137758075
+    dataList: 0.02790756589836918
+  }
+}
+apiSequence {
+  apiList {
+    mulConstant {
+      src: 3
+      num: -0.592941530034971
+    }
+  }
+  apiList {
+    addConstant {
+      src: 2
+      num: -0.068649343670666885
+    }
+  }
+  apiList {
+    addTwoList {
+      src2: 1
+    }
+    dst: 1
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 1
+      srcs: 0
+      srcs: 4
+      srcs: 4
+      srcs: 3
+      weights: -0.74172406130420732
+      weights: -0.10168412391785464
+      weights: 0.61009444903978349
+      weights: -0.59801990801415172
+      weights: 0.28839424471424024
+    }
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 0
+      srcs: 1
+      srcs: 4
+      srcs: 0
+      srcs: 4
+      weights: -0.0729921897036141
+      weights: -0.639046011560241
+      weights: 0.88418679337300143
+      weights: -0.897896171210263
+      weights: -0.715973643054445
+    }
+    dst: 3
+  }
+  apiList {
+    mulManyList{
+        srcs: 0
+        srcs: 1
+        srcs: 2
+    }
+    dst: 2
+  }
+}

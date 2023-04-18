@@ -1,0 +1,417 @@
+param {
+  multiplicativeDepth: 5
+  plaintextModulus: 13313
+  batchSize: 16
+  standardDeviation: 0.221117213
+  secretKeyDist: UNIFORM_TERNARY
+  maxRelinSkDeg: 947223200
+  ksTech: HYBRID
+  securityLevel: HEStd_NotSet
+  ringDim: 512
+  evalAddCount: 18
+  keySwitchCount: 4407
+  encryptionTechnique: EXTENDED
+  multiplicationTechnique: BEHZ
+  multiHopModSize: 58
+  PREMode: NOISE_FLOODING_HRA
+  multipartyMode: INVALID_MULTIPARTY_MODE
+  noiseEstimate: 0.36155579714371866
+  desiredPrecision: -1.3166072770353631e-155
+  statisticalSecurity: -0.71117843407361814
+  numAdversarialQueries: -0.36595940826407458
+  MULTIPARTY: true
+  rotateIndexes: 2
+  rotateIndexes: -2
+  rotateIndexes: -1
+  rotateIndexes: 0
+  rotateIndexes: 1
+  rotateIndexes: 3
+  rotateIndexes: 4
+}
+evalData {
+  allDataLists {
+    dataList: -14255
+    dataList: 37510
+    dataList: -44340
+    dataList: 25445
+    dataList: 6785
+  }
+  allDataLists {
+    dataList: -6174
+    dataList: 20835
+    dataList: 42664
+    dataList: 41051
+    dataList: -56712
+  }
+  allDataLists {
+    dataList: 41219
+    dataList: 53979
+    dataList: -48634
+    dataList: 4492
+    dataList: -15848
+    dataList: 12123
+    dataList: 24974
+    dataList: 5267
+    dataList: 32426
+    dataList: -50479
+    dataList: -57353
+    dataList: -22180
+    dataList: -30053
+    dataList: -18829
+    dataList: -16515
+    dataList: 16551
+  }
+  allDataLists {
+    dataList: -15848
+    dataList: 21002
+    dataList: -44951
+    dataList: -13290
+    dataList: 37595
+  }
+  allDataLists {
+    dataList: -8514
+    dataList: -1536
+    dataList: 37549
+    dataList: -30062
+    dataList: 21966
+    dataList: 26981
+    dataList: -14255
+    dataList: 41607
+    dataList: -2112
+    dataList: 56935
+    dataList: -9094
+    dataList: 13827
+  }
+  allDataLists {
+    dataList: 26174
+    dataList: -19705
+    dataList: -58622
+    dataList: -44404
+    dataList: 25544
+  }
+  allDataLists {
+    dataList: -50643
+    dataList: -45213
+    dataList: -38638
+    dataList: -34121
+    dataList: 59596
+    dataList: 7946
+    dataList: 15017
+    dataList: -14255
+    dataList: -27737
+  }
+  allDataLists {
+    dataList: -361
+    dataList: -39843
+    dataList: 15764
+    dataList: -42383
+    dataList: 57742
+  }
+  allDataLists {
+    dataList: 33414
+    dataList: -44340
+    dataList: 25444
+    dataList: -14255
+    dataList: 14977
+    dataList: 13548
+    dataList: -44767
+    dataList: -45930
+    dataList: 63667
+    dataList: -16452
+  }
+  allDataLists {
+    dataList: -13289
+    dataList: 37595
+    dataList: 21355
+    dataList: 16906
+    dataList: -15848
+  }
+  allDataLists {
+    dataList: -15848
+    dataList: 17162
+    dataList: -44951
+    dataList: -13289
+    dataList: -28038
+  }
+  allDataLists {
+    dataList: -15848
+    dataList: -48637
+    dataList: -43927
+    dataList: 37595
+    dataList: 47983
+    dataList: -38852
+    dataList: 44734
+    dataList: -45507
+    dataList: 35353
+  }
+  allDataLists {
+    dataList: 16906
+    dataList: -44951
+    dataList: -15848
+    dataList: 37595
+    dataList: -13289
+  }
+  allDataLists {
+    dataList: 33414
+    dataList: 25444
+    dataList: 14977
+    dataList: -60724
+    dataList: -14255
+  }
+  allDataLists {
+    dataList: -44951
+    dataList: -15848
+    dataList: 16906
+    dataList: -13289
+    dataList: 37595
+  }
+  allDataLists {
+    dataList: -36168
+    dataList: 9133
+    dataList: 45023
+    dataList: -26650
+    dataList: -38386
+  }
+  allDataLists {
+    dataList: 24565
+    dataList: -43602
+    dataList: -55277
+    dataList: -48564
+    dataList: -33094
+    dataList: -22075
+    dataList: -10477
+    dataList: -8541
+    dataList: -21436
+    dataList: -18519
+    dataList: -39109
+    dataList: 64048
+  }
+  allDataLists {
+    dataList: -15848
+    dataList: 16906
+    dataList: -44951
+    dataList: -13289
+    dataList: 37595
+  }
+  allDataLists {
+    dataList: 33414
+    dataList: 25444
+    dataList: 14977
+    dataList: -44404
+    dataList: 51286
+  }
+  allDataLists {
+    dataList: 20835
+    dataList: -56712
+    dataList: -6174
+    dataList: 41051
+    dataList: 42664
+  }
+  allDataLists {
+    dataList: -16515
+    dataList: 58537
+    dataList: -7802
+    dataList: -10933
+    dataList: -18829
+  }
+}
+apiSequence {
+  apiList {
+    subTwoList {
+      src1: 5
+      src2: 6
+    }
+    dst: 10
+  }
+  apiList {
+    rotateOneList {
+      src: 15
+      index: 1
+    }
+    dst: 18
+  }
+  apiList {
+    rotateOneList {
+      src: 15
+      index: 2
+    }
+    dst: 3
+  }
+  apiList {
+    mulTwoList {
+      src1: 9
+      src2: 16
+    }
+    dst: 5
+  }
+  apiList {
+    rotateOneList {
+      src: 16
+    }
+    dst: 20
+  }
+  apiList {
+    mulManyList {
+      srcs: 3
+      srcs: 10
+      srcs: 0
+      srcs: 7
+      srcs: 12
+    }
+    dst: 5
+  }
+  apiList {
+    subTwoList {
+      src1: 1
+      src2: 14
+    }
+    dst: 19
+  }
+  apiList {
+    mulManyList {
+      srcs: 7
+      srcs: 3
+      srcs: 12
+      srcs: 3
+      srcs: 17
+    }
+    dst: 4
+  }
+  apiList {
+    subTwoList {
+      src1: 17
+    }
+    dst: 11
+  }
+  apiList {
+    rotateOneList {
+      src: 9
+      index: -1
+    }
+    dst: 10
+  }
+  apiList {
+    addManyList {
+      srcs: 11
+      srcs: 13
+      srcs: 13
+      srcs: 2
+      srcs: 6
+    }
+    dst: 6
+  }
+  apiList {
+    addManyList {
+      srcs: 7
+      srcs: 2
+      srcs: 6
+      srcs: 12
+      srcs: 13
+    }
+    dst: 12
+  }
+  apiList {
+    rotateOneList {
+      src: 3
+      index: -2
+    }
+    dst: 10
+  }
+  apiList {
+    mulTwoList {
+      src1: 10
+      src2: 5
+    }
+    dst: 11
+  }
+  apiList {
+    subTwoList {
+      src1: 8
+      src2: 14
+    }
+    dst: 3
+  }
+  apiList {
+    rotateOneList {
+      src: 14
+      index: 2
+    }
+    dst: 13
+  }
+  apiList {
+    subTwoList {
+      src1: 6
+      src2: 9
+    }
+    dst: 10
+  }
+  apiList {
+    addTwoList {
+      src1: 14
+    }
+    dst: 5
+  }
+  apiList {
+    rotateOneList {
+      src: 5
+      index: 3
+    }
+    dst: 12
+  }
+  apiList {
+    rotateOneList {
+      src: 10
+      index: 4
+    }
+  }
+  apiList {
+    subTwoList {
+      src1: 16
+      src2: 9
+    }
+    dst: 17
+  }
+  apiList {
+    subTwoList {
+      src1: 15
+      src2: 15
+    }
+    dst: 10
+  }
+  apiList {
+    subTwoList {
+      src1: 5
+      src2: 19
+    }
+    dst: 5
+  }
+  apiList {
+    addTwoList {
+      src1: 4
+      src2: 15
+    }
+  }
+  apiList {
+    addManyList {
+      srcs: 8
+      srcs: 2
+      srcs: 8
+      srcs: 0
+      srcs: 2
+    }
+    dst: 1
+  }
+  apiList {
+    rotateOneList {
+      src: 12
+    }
+    dst: 6
+  }
+  apiList {
+    rotateOneList {
+      src: 3
+      index: 3
+    }
+    dst: 4
+  }
+}

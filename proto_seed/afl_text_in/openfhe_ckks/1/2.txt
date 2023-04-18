@@ -1,0 +1,101 @@
+param {
+  multiplicativeDepth: 5
+  plaintextModulus: 13707495737409476565
+  batchSize: 8
+  digitSize: 30
+  standardDeviation: 0.54619962
+  secretKeyDist: UNIFORM_TERNARY
+  maxRelinSkDeg: 3734045096
+  ksTech: BV
+  scalTech: FLEXIBLEAUTOEXT
+  firstModSize: 50
+  scalingModSize: 49
+  securityLevel: HEStd_192_classic
+  evalAddCount: 801508659
+  keySwitchCount: 793528171
+  multiplicationTechnique: HPSPOVERQLEVELED
+  multiHopModSize: 3690546909
+  PREMode: NOT_SET
+  multipartyMode: FIXED_NOISE_MULTIPARTY
+  MULTIPARTY: true
+  FHE: true
+  rotateIndexes: 3935
+}
+evalData {
+  allDataLists {
+    dataList: -0.72884100215120484
+    dataList: -0.319009515999661
+    dataList: 0.89232515830496362
+    dataList: 0.06642423868617775
+    dataList: 0.81213505159766841
+  }
+  allDataLists {
+    dataList: -0.99295183127017483
+    dataList: 0.608551090923416
+    dataList: -0.61236248172091146
+    dataList: -0.025816213370160823
+    dataList: -0.43606077264277077
+  }
+  allDataLists {
+    dataList: -0.027744696217674725
+    dataList: 0.9990237101295556
+    dataList: 0.198352388877709
+    dataList: 0.0054192588343875414
+    dataList: 0.21622088460315991
+  }
+  allDataLists {
+    dataList: 0.61772004624067378
+    dataList: -0.058692474657694782
+    dataList: -0.15254570659913136
+    dataList: 0.77052979951513545
+    dataList: 0.88222142087647026
+  }
+  allDataLists {
+    dataList: -0.54325278382304
+    dataList: -0.43354344834809666
+    dataList: 0.12066238677120644
+    dataList: -0.12646731809860945
+    dataList: 0.78506828714665655
+  }
+}
+apiSequence {
+  apiList {
+    rotateOneList {
+      src: 3
+      index: 3935
+    }
+    dst: 3
+  }
+  apiList {
+    mulConstant {
+      num: -0.62407218538017317
+    }
+  }
+  apiList {
+    addManyList {
+      srcs: 3
+      srcs: 2
+      srcs: 1
+      srcs: 3
+      srcs: 1
+    }
+    dst: 3
+  }
+  apiList {
+    mulTwoList {
+      src1: 1
+      src2: 1
+    }
+    dst: 3
+  }
+  apiList {
+    mulManyList {
+      srcs: 3
+      srcs: 3
+      srcs: 2
+      srcs: 2
+      srcs: 0
+    }
+    dst: 3
+  }
+}

@@ -1,0 +1,107 @@
+param {
+  multiplicativeDepth: 3
+  plaintextModulus: 9597922694280185495
+  batchSize: 2048
+  digitSize: 11
+  standardDeviation: 0.889014482
+  secretKeyDist: SPARSE_TERNARY
+  maxRelinSkDeg: 531687114
+  ksTech: HYBRID
+  scalTech: FLEXIBLEAUTOEXT
+  firstModSize: 40
+  scalingModSize: 59
+  evalAddCount: 3859966188
+  keySwitchCount: 1603652293
+  multiplicationTechnique: HPSPOVERQLEVELED
+  multiHopModSize: 1100557457
+  noiseEstimate: 0.43289240370
+  desiredPrecision: 0.12344346363878
+  statisticalSecurity: 1.2344535345
+  numAdversarialQueries: 4.12897453453
+  PREMode: INDCPA
+  multipartyMode: INVALID_MULTIPARTY_MODE
+  rotateIndexes: 8640
+  rotateIndexes: 11891
+}
+evalData {
+  allDataLists {
+    dataList: 0.524885189541302
+    dataList: -0.782128749594319
+    dataList: 0.53833041233492884
+    dataList: -0.63634497318096839
+    dataList: -0.24629092824254395
+  }
+  allDataLists {
+    dataList: 0.672595521573472
+    dataList: 0.031173603790112248
+    dataList: 0.1680501563782435
+    dataList: -0.69551226475204819
+    dataList: 0.11111
+    dataList: 0.51269966123992239
+  }
+  allDataLists {
+    dataList: 0.080707647893631718
+    dataList: 0.37489384260876091
+    dataList: 0.99999
+    dataList: 0.59039501445608034
+  }
+  allDataLists {
+    dataList: -0.55623397973113109
+    dataList: 1
+    dataList: 0.76885277074901537
+    dataList: 0.30227447830605825
+    dataList: -0.75459200115929559
+  }
+  allDataLists {
+    dataList: 0.377331899923246
+    dataList: -0.629467896739389
+    dataList: -0.25750646175258918
+    dataList: 0.23445116363524243
+    dataList: -0.973722807922044
+  }
+}
+apiSequence {
+  apiList {
+    rotateOneList {
+      src: 1
+      index: 11891
+    }
+    dst: 1
+  }
+  apiList {
+    subConstant {
+      src: 4
+      num: -0.71245556172882141
+    }
+    dst: 2
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 4
+      srcs: 2
+      srcs: 4
+      srcs: 1
+      srcs: 1
+      weights: -0.82297398651533615
+      weights: -0.67121294639620055
+      weights: -0.1328533903697966
+      weights: -0.265520047665212
+      weights: -0.64512728328184021
+    }
+  }
+  apiList {
+    addManyList {
+      srcs: 3
+      srcs: 3
+      srcs: 3
+      srcs: 4
+      srcs: 0
+    }
+  }
+  apiList {
+    mulConstant {
+      num: -0.53269382848331481
+    }
+    dst: 3
+  }
+}

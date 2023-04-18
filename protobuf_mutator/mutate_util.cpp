@@ -39,7 +39,7 @@ namespace protobuf_mutator {
         for (int i = 0; i < field_count; i++){
             auto field = desc->field(i);
             if (field->is_repeated())
-                AddRepeatedField(msg, field, remain_size);
+                AddRepeatedField(msg, field, remain_size, 5);
             else if(auto oneof_desc = field->containing_oneof()){
                 // Handle entire oneof group on the first field.
                 if(field->index_in_oneof() != 0) continue;
@@ -56,11 +56,11 @@ namespace protobuf_mutator {
         }
     }
 
-    void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size){
+    void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size, int min_new_size){
         auto ref = msg->GetReflection();
         auto oldLen = ref->FieldSize(*msg, field);
         // newLen in [1, MAX_NEW_REPEATED_SIZE]
-        auto newLen = GetRandomNum(1, MAX_NEW_REPEATED_SIZE);
+        auto newLen = GetRandomNum(min_new_size, MAX_NEW_REPEATED_SIZE);
         auto max_size = GetMessageSize(msg) + remain_size;
         for(int i = 1; i <= newLen; i++){
             // add random field
@@ -172,11 +172,17 @@ namespace protobuf_mutator {
         auto ref = msg->GetReflection();
         auto type = field->cpp_type();
         auto len = ref->FieldSize(*msg, field);
+        if(len <= MAX_NEW_REPEATED_SIZE) return;
         auto max_size = GetMessageSize(msg) + remain_size;
+        vector<int> idx(len);
+        for(int i = 0; i < len; i++) idx[i] = i;
+        shuffle(idx.begin(), idx.end(), getRandEngine()->randLongEngine);
+        auto cnt = GetRandomIndex(min(len / 2, MAX_NEW_REPEATED_SIZE / 2));
+        if(cnt == 0) return;
+        sort(idx.begin(), idx.begin() + cnt);
         // O (n ^ 2) implementation
-        for(int i = len - 1; i >= 0; i--){
-            if(!CanDelete()) continue;
-            for(int j = i; j + 1 < len; j++)
+        while(cnt --){
+            for(int j = idx[cnt]; j + 1 < len; j++)
                 ref->SwapElements(msg, field, j, j + 1);
             ref->RemoveLast(msg, field);
             len--;
@@ -185,7 +191,7 @@ namespace protobuf_mutator {
     }
     
     void DeleteSetField(Message* msg, const FieldDescriptor* field, int& remain_size){
-        if(!CanDelete()) return;
+        if(!CanDeleteSimpleField()) return;
         auto ref = msg->GetReflection();
         auto type = field->cpp_type();
         auto max_size = GetMessageSize(msg) + remain_size;
@@ -279,7 +285,7 @@ namespace protobuf_mutator {
                     auto now = ref->GetRepeatedEnumValue(*msg, field, i);
                     auto temp = now;
                     mutate(&now);
-                    NotNegMod(now, field->enum_type()->value_count());
+                    now = NotNegMod(now, field->enum_type()->value_count());
                     ref->SetRepeatedEnumValue(msg, field, i, now);
                     if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedEnumValue(msg, field, i, temp);
                 }              
@@ -300,7 +306,7 @@ namespace protobuf_mutator {
             int index = field->index_in_oneof();
             int newIndex = index;
             mutate(&newIndex);
-            NotNegMod(newIndex, oneof_desc->field_count());
+            newIndex = NotNegMod(newIndex, oneof_desc->field_count());
             // If the index does not change, then mutate the field itself
             if(index == newIndex) return;
             auto new_field = oneof_desc->field(newIndex);
@@ -368,7 +374,7 @@ namespace protobuf_mutator {
                 auto now = ref->GetEnumValue(*msg, field);
                 auto temp = now;
                 mutate(&now);
-                NotNegMod(now, field->enum_type()->value_count());
+                now = NotNegMod(now, field->enum_type()->value_count());
                 ref->SetEnumValue(msg, field, now);     
                 if(max_size - GetMessageSize(msg) < 0) ref->SetEnumValue(msg, field, temp);                   
                 break;

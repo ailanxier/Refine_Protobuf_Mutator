@@ -43,29 +43,21 @@ endif()
 option(DEBUG "Set to OFF to disable printing debug messages" ON)
 
 if(DEBUG)
-    message("Working in DEBUG mode (print debug messages).")
+    message("=============== Working in DEBUG mode (print debug messages). ===============")
     add_definitions(-DDEBUG)
 endif()
-
 
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 message("PROTOBUF_INCLUDE_DIRS: ${PROTOBUF_INCLUDE_DIRS}")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# find_package(libprotobuf-mutator REQUIRED)
-# message("Found LPM :${libprotobuf-mutator_DIR}")
-# if(libprotobuf-mutator_FOUND)
-#     get_filename_component(_IMPORT_PREFIX "${libprotobuf-mutator_DIR}" PATH)
-#     get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-#     get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-#     SET(LPM_INCLUDE_DIRS "${_IMPORT_PREFIX}/include/libprotobuf-mutator")
-# endif(libprotobuf-mutator_FOUND)
+# ===================== OPENFHE-BGV =====================
+set(CUSTOM_MUTATOR_NAME "openfhe_bgv_protobuf_mutator")
 add_subdirectory(protobuf_mutator)
 add_subdirectory(postprocess)
 add_subdirectory(mutation_test)
 add_subdirectory(proto_seed)
-# add_subdirectory(afl_test)
 link_libraries(protobuf)
 
 
