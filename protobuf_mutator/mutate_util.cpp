@@ -39,7 +39,7 @@ namespace protobuf_mutator {
         for (int i = 0; i < field_count; i++){
             auto field = desc->field(i);
             if (field->is_repeated())
-                AddRepeatedField(msg, field, remain_size);
+                AddRepeatedField(msg, field, remain_size, 5);
             else if(auto oneof_desc = field->containing_oneof()){
                 // Handle entire oneof group on the first field.
                 if(field->index_in_oneof() != 0) continue;
@@ -56,11 +56,11 @@ namespace protobuf_mutator {
         }
     }
 
-    void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size){
+    void AddRepeatedField(Message* msg, const FieldDescriptor* field, int& remain_size, int min_new_size){
         auto ref = msg->GetReflection();
         auto oldLen = ref->FieldSize(*msg, field);
         // newLen in [1, MAX_NEW_REPEATED_SIZE]
-        auto newLen = GetRandomNum(1, MAX_NEW_REPEATED_SIZE);
+        auto newLen = GetRandomNum(min_new_size, MAX_NEW_REPEATED_SIZE);
         auto max_size = GetMessageSize(msg) + remain_size;
         for(int i = 1; i <= newLen; i++){
             // add random field
@@ -172,11 +172,17 @@ namespace protobuf_mutator {
         auto ref = msg->GetReflection();
         auto type = field->cpp_type();
         auto len = ref->FieldSize(*msg, field);
+        if(len <= MAX_NEW_REPEATED_SIZE) return;
         auto max_size = GetMessageSize(msg) + remain_size;
+        vector<int> idx(len);
+        for(int i = 0; i < len; i++) idx[i] = i;
+        shuffle(idx.begin(), idx.end(), getRandEngine()->randLongEngine);
+        auto cnt = GetRandomIndex(min(len / 2, MAX_NEW_REPEATED_SIZE / 2));
+        if(cnt == 0) return;
+        sort(idx.begin(), idx.begin() + cnt);
         // O (n ^ 2) implementation
-        for(int i = len - 1; i >= 0; i--){
-            if(!CanDelete()) continue;
-            for(int j = i; j + 1 < len; j++)
+        while(cnt --){
+            for(int j = idx[cnt]; j + 1 < len; j++)
                 ref->SwapElements(msg, field, j, j + 1);
             ref->RemoveLast(msg, field);
             len--;
@@ -185,7 +191,7 @@ namespace protobuf_mutator {
     }
     
     void DeleteSetField(Message* msg, const FieldDescriptor* field, int& remain_size){
-        if(!CanDelete()) return;
+        if(!CanDeleteSimpleField()) return;
         auto ref = msg->GetReflection();
         auto type = field->cpp_type();
         auto max_size = GetMessageSize(msg) + remain_size;
@@ -210,7 +216,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedInt32(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedInt32(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedInt32(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_INT64:
@@ -220,7 +226,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedInt64(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedInt64(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedInt64(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_UINT32:
@@ -230,7 +236,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedUInt32(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedUInt32(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedUInt32(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_UINT64:
@@ -240,7 +246,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedUInt64(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedUInt64(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedUInt64(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_DOUBLE:
@@ -250,7 +256,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedDouble(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedDouble(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedDouble(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_FLOAT:
@@ -260,7 +266,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedFloat(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedFloat(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedFloat(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_BOOL:
@@ -270,7 +276,7 @@ namespace protobuf_mutator {
                     auto temp = now;
                     mutate(&now);
                     ref->SetRepeatedInt32(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedInt32(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedInt32(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_ENUM:
@@ -279,9 +285,9 @@ namespace protobuf_mutator {
                     auto now = ref->GetRepeatedEnumValue(*msg, field, i);
                     auto temp = now;
                     mutate(&now);
-                    NotNegMod(now, field->enum_type()->value_count());
+                    now = NotNegMod(now, field->enum_type()->value_count());
                     ref->SetRepeatedEnumValue(msg, field, i, now);
-                    if(max_size - GetMessageSize(msg) < 0) ref->SetRepeatedEnumValue(msg, field, i, temp);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedEnumValue(msg, field, i, temp);
                 }              
                 break;
             case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -300,7 +306,7 @@ namespace protobuf_mutator {
             int index = field->index_in_oneof();
             int newIndex = index;
             mutate(&newIndex);
-            NotNegMod(newIndex, oneof_desc->field_count());
+            newIndex = NotNegMod(newIndex, oneof_desc->field_count());
             // If the index does not change, then mutate the field itself
             if(index == newIndex) return;
             auto new_field = oneof_desc->field(newIndex);
@@ -320,7 +326,7 @@ namespace protobuf_mutator {
                 auto temp = now;
                 mutate(&now);
                 ref->SetInt32(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetInt32(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetInt32(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_INT64:{
                 auto now = ref->GetInt64(*msg, field);
@@ -334,43 +340,43 @@ namespace protobuf_mutator {
                 auto temp = now;
                 mutate(&now);
                 ref->SetUInt32(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetUInt32(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetUInt32(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_UINT64:{
                 auto now = ref->GetUInt64(*msg, field);
                 auto temp = now;
                 mutate(&now);
                 ref->SetUInt64(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetUInt64(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetUInt64(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_DOUBLE:{
                 auto now = ref->GetDouble(*msg, field);
                 auto temp = now;
                 mutate(&now);
                 ref->SetDouble(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetDouble(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetDouble(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_FLOAT:{
                 auto now = ref->GetFloat(*msg, field);
                 auto temp = now;
                 mutate(&now);
                 ref->SetFloat(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetFloat(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetFloat(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_BOOL:{
                 auto now = ref->GetBool(*msg, field);
                 auto temp = now;
                 mutate(&now);
                 ref->SetBool(msg, field, now);
-                if(max_size - GetMessageSize(msg) < 0) ref->SetBool(msg, field, temp);
+                if(max_size < GetMessageSize(msg)) ref->SetBool(msg, field, temp);
                 break;
             } case FieldDescriptor::CPPTYPE_ENUM:{
                 auto now = ref->GetEnumValue(*msg, field);
                 auto temp = now;
                 mutate(&now);
-                NotNegMod(now, field->enum_type()->value_count());
+                now = NotNegMod(now, field->enum_type()->value_count());
                 ref->SetEnumValue(msg, field, now);     
-                if(max_size - GetMessageSize(msg) < 0) ref->SetEnumValue(msg, field, temp);                   
+                if(max_size < GetMessageSize(msg)) ref->SetEnumValue(msg, field, temp);                   
                 break;
             } 
             case FieldDescriptor::CPPTYPE_MESSAGE:
@@ -459,7 +465,7 @@ namespace protobuf_mutator {
         auto len1 = ref1->FieldSize(*msg1, field1);
         auto len2 = ref2->FieldSize(*msg2, field2);
         if(len1 == 0 || len2 == 0) return;
-        auto max_size = msg1->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg1) + remain_size;
         vector<int> idx1(len1);
         for(int i = 0; i < len1; i++) idx1[i] = i;
         shuffle(idx1.begin(), idx1.end(), getRandEngine()->randLongEngine);
@@ -470,72 +476,74 @@ namespace protobuf_mutator {
                 case FieldDescriptor::CPPTYPE_INT32:{
                     auto temp = ref1->GetRepeatedInt32(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedInt32(msg1, field1, idx1[i], ref2->GetRepeatedInt32(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedInt32(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_INT64:{
                     auto temp = ref1->GetRepeatedInt64(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedInt64(msg1, field1, idx1[i], ref2->GetRepeatedInt64(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedInt64(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_UINT32:{
                     auto temp = ref1->GetRepeatedUInt32(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedUInt32(msg1, field1, idx1[i], ref2->GetRepeatedUInt32(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedUInt32(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_UINT64:{
                     auto temp = ref1->GetRepeatedUInt64(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedUInt64(msg1, field1, idx1[i], ref2->GetRepeatedUInt64(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedUInt64(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_DOUBLE:{
                     auto temp = ref1->GetRepeatedDouble(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedDouble(msg1, field1, idx1[i], ref2->GetRepeatedDouble(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedDouble(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_FLOAT:{
                     auto temp = ref1->GetRepeatedFloat(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedFloat(msg1, field1, idx1[i], ref2->GetRepeatedFloat(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedFloat(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_BOOL:{
                     auto temp = ref1->GetRepeatedBool(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedBool(msg1, field1, idx1[i], ref2->GetRepeatedBool(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedBool(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_ENUM:{
                     auto temp = ref1->GetRepeatedEnumValue(*msg1, field1, idx1[i]);
                     ref1->SetRepeatedEnumValue(msg1, field1, idx1[i], ref2->GetRepeatedEnumValue(*msg2, field2, idx2));
-                    if(max_size - msg1->ByteSizeLong() < 0)
+                    if(max_size < GetMessageSize(msg1))
                         ref1->SetRepeatedEnumValue(msg1, field1, idx1[i], temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_MESSAGE:{
                     // Do not replace if replacement would cause exceeding the maximum size
-                    if(remain_size + ref1->GetRepeatedMessage(*msg1, field1, idx1[i]).ByteSizeLong() 
-                                   - ref2->GetRepeatedMessage(*msg2, field2, idx2).ByteSizeLong() < 0)
-                        break;
+                    Message* temp = ref1->GetRepeatedMessage(*msg1, field1, idx1[i]).New();
+                    temp->CopyFrom(ref1->GetRepeatedMessage(*msg1, field1, idx1[i]));
                     ref1->MutableRepeatedMessage(msg1, field1, idx1[i])->CopyFrom(ref2->GetRepeatedMessage(*msg2, field2, idx2));
+                    if(max_size < GetMessageSize(msg1))
+                        ref1->MutableRepeatedMessage(msg1, field1, idx1[i])->CopyFrom(*temp);
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_STRING:
                     // not support
                     break;
             }
-            remain_size = max_size - msg1->ByteSizeLong();
+            remain_size = max_size - GetMessageSize(msg1);
+            
         }
     }
 
@@ -543,7 +551,7 @@ namespace protobuf_mutator {
          const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size){
         auto ref1 = msg1->GetReflection();
         auto ref2 = msg2->GetReflection();
-        auto max_size = msg1->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg1) + remain_size;
         Message* temp = msg1->New();
         temp->CopyFrom(*msg1);
         // Special judgment for oneof fields
@@ -583,10 +591,10 @@ namespace protobuf_mutator {
         }
         // XXX: To avoid dealing with the complex situation of oneof field, 
         // just copy the whole original message to the crossover one in case of exceeding the maximum size
-        remain_size = max_size - msg1->ByteSizeLong();
+        remain_size = max_size - GetMessageSize(msg1);
         if(remain_size < 0){
             msg1->CopyFrom(*temp);
-            remain_size = max_size - msg1->ByteSizeLong();
+            remain_size = max_size - GetMessageSize(msg1);
         }
         delete temp;
     }
@@ -597,7 +605,7 @@ namespace protobuf_mutator {
         auto ref2 = msg2->GetReflection();
         auto len1 = ref1->FieldSize(*msg1, field1);
         auto len2 = ref2->FieldSize(*msg2, field2);
-        auto max_size = msg1->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg1) + remain_size;
         auto newLen = GetRandomIndex(min(len2, MAX_NEW_REPEATED_SIZE));
         vector<int> idx2(len2);
         for(int i = 0; i < len2; i++) idx2[i] = i;
@@ -649,7 +657,7 @@ namespace protobuf_mutator {
                 const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size){
         auto ref1 = msg1->GetReflection();
         auto ref2 = msg2->GetReflection();
-        auto max_size = msg1->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg1) + remain_size;
         // Special judgment for oneof fields
         if(auto oneof_desc1 = field1->containing_oneof())
             field1 = oneof_desc1->field(field2->index_in_oneof());

@@ -30,7 +30,7 @@ namespace protobuf_mutator {
     }
     
     #define DEBUG_PRINT 0
-    inline void printMutation(FieldMuationType mutationType, const FieldDescriptor* field, const Message* msg){
+    inline void printMutation(FieldMuationType mutationType, const FieldDescriptor* field, const Message* msg, int remain_size){
         if(DEBUG_PRINT){
             cout.fill(' ');
             string name;
@@ -39,10 +39,10 @@ namespace protobuf_mutator {
                     name = now_field->name();
                 }else name = field->full_name() + "(undefine)";
             }else name = field->name();
-            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(mutationType)<<std::endl;
+            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(mutationType)<<" "<< remain_size<<std::endl;
         }
     }
-    inline void printCrossover(CrossoverType crossoverType, const FieldDescriptor* field, const Message* msg){
+    inline void printCrossover(CrossoverType crossoverType, const FieldDescriptor* field, const Message* msg, int remain_size){
         if(DEBUG_PRINT){
             cout.fill(' ');
             string name;
@@ -51,12 +51,13 @@ namespace protobuf_mutator {
                     name = now_field->name();
                 }else name = field->full_name() + "(undefine)";
             }else name = field->name();
-            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(crossoverType)<<std::endl;
+            cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(crossoverType)<<" "<< remain_size<<std::endl;
         }
     }
 
     void Mutator::Mutate(Message* message, int& max_size) {
-        int remain_size = max_size - message->ByteSizeLong();
+        int remain_size = max_size - GetMessageSize(message);
+        // cout<<remain_size<<endl;
         MessageMutation(message, remain_size);
         max_size = remain_size;
     }
@@ -69,7 +70,7 @@ namespace protobuf_mutator {
         # define TRY_MUTATE_FIELD TryMutateField(msg, field, allowed_mutations, remain_size)
         auto desc = msg->GetDescriptor();
         auto ref = msg->GetReflection();
-        auto max_size = msg->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg) + remain_size;
         MutationBitset allowed_mutations;
         restoreMutationBitset(allowed_mutations);
         int field_count = desc->field_count();
@@ -114,8 +115,8 @@ namespace protobuf_mutator {
                     TRY_MUTATE_FIELD;
                 }
             }
-            // std::cout<<field->name()<<" "<<msg->ByteSizeLong()<<std::endl;
             remain_size = max_size - msg->ByteSizeLong();
+            // std::cout<<field->name()<<" "<<remain_size<<std::endl;
         }
     }
 
@@ -130,7 +131,6 @@ namespace protobuf_mutator {
         FieldMuationType mutationType = (FieldMuationType)pos;
         auto ref = msg->GetReflection();
         if(mutationType >= FieldMuationType::None) return;
-        printMutation(mutationType, field, msg);
         switch (mutationType){
             case FieldMuationType::MutationAdd:
                 if(field->is_repeated())
@@ -166,10 +166,12 @@ namespace protobuf_mutator {
             default:
                 break;
         }
+        printMutation(mutationType, field, msg, remain_size);
     }
 
     void Mutator::Crossover(Message* message1, const Message* message2, int& max_size) {
-        int remain_size = max_size - message1->ByteSizeLong();
+        int remain_size = max_size - GetMessageSize(message1);
+        // cout<<remain_size<<endl;
         MessageCrossover(message1, message2, remain_size);
         max_size = remain_size;       
     }
@@ -183,7 +185,7 @@ namespace protobuf_mutator {
         auto desc2 = msg2->GetDescriptor();
         auto ref1 = msg1->GetReflection();
         auto ref2 = msg2->GetReflection();
-        auto max_size = msg1->ByteSizeLong() + remain_size;
+        auto max_size = GetMessageSize(msg1) + remain_size;
         CrossoverBitset allowed_crossovers;
         int field_count = desc1->field_count();
         for (int i = 0; i < field_count; i++) {
@@ -234,7 +236,8 @@ namespace protobuf_mutator {
                     }
                 }
             }
-            remain_size = max_size - msg1->ByteSizeLong();
+            remain_size = max_size - GetMessageSize(msg1);
+            // cout << field1->name() << " remain size: " << remain_size << endl;
         }
     }
 
@@ -250,7 +253,6 @@ namespace protobuf_mutator {
             return;
         auto ref1 = msg1->GetReflection();
         auto ref2 = msg2->GetReflection();
-        printCrossover(crossoverType, field1, msg1);
         allowed_crossovers.reset();
         switch (crossoverType){
             case CrossoverType::Replace:
@@ -271,6 +273,7 @@ namespace protobuf_mutator {
                 allowed_crossovers.set((int)CrossoverType::None);
                 break;
         }        
+        printCrossover(crossoverType, field1, msg1, remain_size);
     }
     
     void Mutator::Seed(uint32_t value) {getRandEngine()->Seed(value); }

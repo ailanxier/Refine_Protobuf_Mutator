@@ -1,0 +1,203 @@
+param {
+  multiplicativeDepth: 3
+  plaintextModulus: 9357430795550465655
+  batchSize: 0
+  digitSize: 21
+  standardDeviation: 2002.1532
+  secretKeyDist: GAUSSIAN
+  maxRelinSkDeg: 4032576450
+  ksTech: HYBRID
+  scalTech: FIXEDAUTO
+  firstModSize: 44
+  scalingModSize: 43
+  evalAddCount: 3681197896
+  keySwitchCount: 1122844080
+  multiplicationTechnique: HPSPOVERQLEVELED
+  multiHopModSize: 913940898
+  PREMode: INDCPA
+  multipartyMode: INVALID_MULTIPARTY_MODE
+  noiseEstimate: -0.01646808700972735
+  desiredPrecision: 0.26546952122023071
+  statisticalSecurity: 0.478806453939121
+  numAdversarialQueries: 0.12596961456754618
+  PRE: true
+  FHE: true
+  rotateIndexes: -19013
+  rotateIndexes: 6626
+  rotateIndexes: 11702
+  rotateIndexes: 19058
+}
+evalData {
+  allDataLists {
+    dataList: 0.92075330297697611
+    dataList: 0.73279812565665847
+    dataList: -0.75368367035960937
+    dataList: 0.64305314139425374
+    dataList: 0.31132113926213978
+    dataList: -0.98528228225517067
+    dataList: 0.790555143370482
+    dataList: 0.50625859021202024
+    dataList: -0.12156278668631548
+    dataList: 0.849652647500345
+    dataList: -0.32704435937974841
+    dataList: 0.049494725434922282
+    dataList: -0.20335749280218751
+    dataList: -0.036157273127231826
+  }
+  allDataLists {
+    dataList: 0.57372530767617147
+    dataList: 0.40194373610356982
+    dataList: 0.66646341990536384
+    dataList: -0.966450610864783
+    dataList: -0.035919649293283507
+    dataList: -3.8949483606260678e-78
+    dataList: 0.51056021201511359
+    dataList: -0.44664825286087007
+    dataList: -0.017419388306228696
+    dataList: -4.8484930617187782e-78
+    dataList: 0.10967532604620911
+    dataList: -0.60608923705545914
+    dataList: -0.14995795201349804
+    dataList: -0.21458212844208963
+    dataList: -0.80333709405598808
+    dataList: -1.6256748316784624e-39
+    dataList: -0.51938515870099089
+    dataList: 9.5559930477199135e-79
+    dataList: 0.58280879983525136
+    dataList: -0.015608470882964132
+    dataList: -0.2672513356030003
+    dataList: -0.20112887348571085
+    dataList: -0.92574791967776715
+  }
+  allDataLists {
+    dataList: -0.46639332770855224
+    dataList: 0.31195358336694512
+    dataList: -0.24239995122235114
+    dataList: 0.6657604858646835
+    dataList: 0.30669031618498677
+    dataList: -0.928760678928715
+    dataList: -0.066533210796667075
+    dataList: 0.84340492472717221
+    dataList: 0.91099825443093807
+    dataList: -0.5323668122552172
+    dataList: 0.78103633971470576
+    dataList: -0.21531132872247272
+  }
+  allDataLists {
+    dataList: -0.4133806989829486
+    dataList: -0.85095573563932048
+    dataList: 0.72285258113921791
+    dataList: 0.3481906760079807
+    dataList: 0.67281136964848609
+    dataList: 0.55517521047053742
+    dataList: 0.32005672953398223
+    dataList: -0.27737225816737887
+    dataList: 0.0971277803900461
+    dataList: 0.2636104281985252
+  }
+  allDataLists {
+    dataList: -0.14946967076349804
+    dataList: 0.57360323736367147
+    dataList: -0.035927278687814757
+    dataList: 0.51056021201511359
+    dataList: -0.60608925195662033
+    dataList: -0.95883377877583342
+    dataList: -0.58624123210741286
+    dataList: 0.24171314823310586
+  }
+  allDataLists {
+    dataList: -0.822581250819489
+    dataList: -0.68070082201242932
+    dataList: 0.62161187284446084
+    dataList: 0.48853579619805276
+    dataList: 0.0049518801037666815
+    dataList: -0.10099403134917317
+  }
+  allDataLists {
+    dataList: -0.70151193960514224
+    dataList: 0.022884032049424796
+    dataList: -0.61919202359511272
+    dataList: -0.0089633892979983365
+    dataList: 0.490537133876783
+  }
+  allDataLists {
+    dataList: -0.20789037419250656
+    dataList: 0.847215668365912
+    dataList: -0.4813295404951452
+    dataList: -0.013745422386467865
+    dataList: -0.90777026308390385
+  }
+  allDataLists {
+    dataList: 0.522147582655891
+    dataList: 0.79864751323320093
+    dataList: 0.22074036056510415
+    dataList: 2.1955423863117773e-20
+    dataList: 0.58075391021071554
+  }
+}
+apiSequence {
+  apiList {
+    rotateOneList {
+      src: 6
+      index: 6626
+    }
+    dst: 4
+  }
+  apiList {
+    mulManyList {
+      srcs: 0
+    }
+  }
+  apiList {
+    subTwoList {
+      src1: 1
+      src2: 2
+    }
+    dst: 6
+  }
+  apiList {
+    subTwoList {
+      src1: 1
+      src2: 5
+    }
+    dst: 3
+  }
+  apiList {
+    addTwoList {
+      src1: 4
+      src2: 8
+    }
+    dst: 6
+  }
+  apiList {
+    addConstant {
+      src: 8
+      num: 0.926054844241291
+    }
+    dst: 3
+  }
+  apiList {
+    mulManyList {
+      srcs: 1
+    }
+  }
+  apiList {
+    rotateOneList {
+      src: 2
+      index: 11702
+    }
+  }
+  apiList {
+    rotateOneList {
+      src: 2
+      index: 19058
+    }
+  }
+  apiList {
+    addConstant {
+      src: 6
+      num: -0.97279762256438451
+    }
+    dst: 1
+  }
+}

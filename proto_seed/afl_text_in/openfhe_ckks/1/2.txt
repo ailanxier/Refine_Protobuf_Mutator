@@ -1,0 +1,205 @@
+param {
+  multiplicativeDepth: 5
+  plaintextModulus: 14784944425922292018
+  batchSize: 128
+  digitSize: 18
+  standardDeviation: 0.350687802
+  secretKeyDist: GAUSSIAN
+  maxRelinSkDeg: 384993756
+  ksTech: HYBRID
+  scalTech: FLEXIBLEAUTOEXT
+  firstModSize: 59
+  scalingModSize: 49
+  securityLevel: HEStd_192_classic
+  evalAddCount: 188975517
+  encryptionTechnique: EXTENDED
+  multiplicationTechnique: HPS
+  multiHopModSize: 2115943753
+  PREMode: INDCPA
+  multipartyMode: NOISE_FLOODING_MULTIPARTY
+  desiredPrecision: 0.050435363547962853
+  statisticalSecurity: -0.065630248980851569
+  numAdversarialQueries: 0.091516707518362272
+  PRE: true
+  rotateIndexes: -10907
+}
+evalData {
+  allDataLists {
+    dataList: 0.12287596378747523
+    dataList: -0.34726070591044411
+    dataList: 0.41636889473266536
+    dataList: 0.9351008348288905
+    dataList: 0.54598561759475439
+    dataList: -0.50578763422355921
+    dataList: -0.99671282742219025
+    dataList: -0.95803501486224385
+  }
+  allDataLists {
+    dataList: -0.39896694188941828
+    dataList: -0.37144745712443084
+    dataList: 0.93506905822178532
+    dataList: -0.55458381653909861
+    dataList: -0.71240895264470661
+    dataList: 0.12095091384294276
+    dataList: -0.54315927774626283
+    dataList: 0.056986682516838361
+    dataList: -0.19584233158867248
+    dataList: -0.9530656154085877
+  }
+  allDataLists {
+    dataList: 0.050868489710630183
+    dataList: 0.17675966920503128
+    dataList: -0.59412029152245049
+    dataList: -0.63138594155721928
+    dataList: -0.42110059960488033
+    dataList: -0.436623857764453
+    dataList: -0.17754787268710703
+    dataList: -0.062164937368140438
+    dataList: 5.1301435287054037e-06
+    dataList: -0.81441248244631737
+    dataList: -1.4327065527739519e-05
+    dataList: -0.72276912971727625
+    dataList: -0.493256065228702
+  }
+  allDataLists {
+    dataList: -0.84378125911434854
+    dataList: -0.40105073025598492
+    dataList: -0.04576919907753868
+    dataList: -0.79213118878912014
+    dataList: 0.63816916885791786
+    dataList: 0.85163996681967569
+    dataList: -0.18080175409177879
+    dataList: 0.001275964832327503
+    dataList: -0.24944821624165647
+    dataList: -0.95851476548827019
+    dataList: -0.099027094199138577
+    dataList: -0.43731586456181204
+    dataList: 0.74690816088114542
+    dataList: 0.22957258828827909
+    dataList: 0.21809117775577636
+  }
+  allDataLists {
+    dataList: -0.19983354329055381
+    dataList: 0.86749296899541051
+    dataList: 0.25770704299770708
+    dataList: -0.34357823694509637
+    dataList: 0.937851537400167
+    dataList: 0.26255749499707126
+    dataList: -0.50816535523014339
+    dataList: -0.51861581669388113
+  }
+  allDataLists {
+    dataList: -0.37144745712443084
+    dataList: -0.71240895264464976
+    dataList: -0.55458381653909861
+    dataList: 0.93506905822178532
+    dataList: -0.39896694188941828
+  }
+  allDataLists {
+    dataList: -0.37144745712443084
+    dataList: -0.71240895264464976
+    dataList: -0.55458381653909861
+    dataList: 0.93506905822178532
+    dataList: -0.39896694188941828
+  }
+  allDataLists {
+    dataList: 0.050868370501340632
+    dataList: 0.17675954999574173
+    dataList: -0.59412029152245049
+    dataList: -0.63138594155721928
+    dataList: -0.42110059960488033
+  }
+  allDataLists {
+    dataList: 0.12287596378747523
+    dataList: 0.54598561759475439
+    dataList: 0.41636889473266536
+    dataList: -0.34726070591044411
+    dataList: 0.9351008348288905
+  }
+}
+apiSequence {
+  apiList {
+    mulManyList {
+      srcs: 0
+      srcs: 2
+      srcs: 0
+      srcs: 0
+      srcs: 0
+    }
+  }
+  apiList {
+    addManyList {
+      srcs: 0
+    }
+    dst: 3
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 0
+      srcs: 4
+      srcs: 0
+      srcs: 0
+      srcs: 5
+      weights: 0.86849164019656833
+      weights: 0.067715752584496469
+      weights: 0.60218542571770217
+      weights: 0.23206905068730088
+      weights: -0.95370679082964949
+    }
+    dst: 1
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 7
+      srcs: 0
+      srcs: 0
+      srcs: 2
+      srcs: 3
+      weights: 0.86849164019656833
+      weights: 0.067715752584496469
+      weights: 0.60218542571770217
+      weights: 0.23206905068730088
+      weights: -0.95370679082964949
+    }
+  }
+  apiList {
+    subTwoList {
+      src1: 6
+      src2: 5
+    }
+    dst: 8
+  }
+  apiList {
+    linearWeightedSum {
+      srcs: 0
+      srcs: 4
+      srcs: 0
+      srcs: 0
+      srcs: 5
+      weights: 0.86849164019656833
+      weights: 0.067715752584496469
+      weights: 0.60218542571770217
+      weights: 0.23206905068730088
+      weights: -0.95370679082964949
+    }
+  }
+  apiList {
+    addTwoList {
+      src1: 7
+      src2: 4
+    }
+  }
+  apiList {
+    subConstant {
+      src: 5
+      num: 0.11117261525803235
+    }
+    dst: 6
+  }
+  apiList {
+    addTwoList {
+      src1: 2
+      src2: 4
+    }
+  }
+}

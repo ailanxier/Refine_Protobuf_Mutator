@@ -77,45 +77,46 @@ int main(int argc, char *argv[]){
     };
 
     //参数1和参数2是两个protobuf格式的二进制输入文件路径
-    string data1 = read_file_from_path(seed_path + "1.txt");
-    if(!LoadProtoInput(USE_BINARY_PROTO, (const uint8_t *)data1.c_str(), data1.size(), &msg1))
-      ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
-    string data2 = read_file_from_path(seed_path + "2.txt");
-    if(!LoadProtoInput(USE_BINARY_PROTO, (const uint8_t *)data2.c_str(), data2.size(), &msg2)) 
-      ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
+    // string data1 = read_file_from_path(bin_seed_path + "0.txt");
+    // if(!LoadProtoInput(USE_BINARY_PROTO, (const uint8_t *)data1.c_str(), data1.size(), &msg1))
+    //   ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
+    // string data2 = read_file_from_path(bin_seed_path + "1.txt");
+    // if(!LoadProtoInput(USE_BINARY_PROTO, (const uint8_t *)data2.c_str(), data2.size(), &msg2)) 
+    //   ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
     
     // 设置种子
     AFLCustomHepler* mutatorHelper = afl_custom_init(nullptr, seed);
     print_words({"-------------------", "original message1", "-------------------"}, 2, NO_STAR_LINE);
-    // createRandomMessage(&msg1, remain_size);
+    createRandomMessage(&msg1, remain_size);
     msg1.PrintDebugString();
-    // remain_size = MAX;
-    // print_words({"-------------------", "original message2", "-------------------"}, 2, NO_STAR_LINE);
-    // // createRandomMessage(&msg2, remain_size);
-    // msg2.PrintDebugString();
+    string data1 = msg1.SerializeAsString();
+    remain_size = MAX;
+    print_words({"-------------------", "original message2", "-------------------"}, 2, NO_STAR_LINE);
+    createRandomMessage(&msg2, remain_size);
+    msg2.PrintDebugString();
+    string data2 = msg2.SerializeAsString();
     
     // string data1 = msg1.SerializeAsString(), data2 = msg2.SerializeAsString();
     string test_str = msg1.DebugString();
 
     remain_size = MAX;
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 3; i++) {
 		uint8_t *out_buf = nullptr; 
 		int new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data1.c_str(), data1.size(),
 							&out_buf, (uint8_t*)data2.c_str(), data2.size(), remain_size);
 		uint8_t *post_out = nullptr;
-		// print_words({"=======================", ToStr(i), "====================="}, 2, NO_STAR_LINE);
+		print_words({"=======================", ToStr(i), "====================="}, 2, NO_STAR_LINE);
         new_size = afl_custom_post_process(mutatorHelper, out_buf, new_size, &post_out);
-        string str = string((char*)post_out, new_size);
 
-		msg1.ParseFromString(str);
+        LoadProtoInput(USE_BINARY_PROTO, post_out, new_size, &msg1);
 		// data1 = msg1.DebugString();
-        // print_words({"-------------------", "msg1", "-------------------"}, 2);
-        // msg1.PrintDebugString();
+        print_words({"-------------------", "post msg1", "-------------------"}, 2);
+        msg1.PrintDebugString();
 		// print_diff(test_str, data1);
-        data1 = msg1.SerializeAsString();
+        // data1 = msg1.SerializeAsString();
     }
-    print_words({"-------------------", "msg1", "-------------------"}, 2);
-    msg1.PrintDebugString();
+    // print_words({"-------------------", "msg1", "-------------------"}, 2);
+    // msg1.PrintDebugString();
     afl_custom_deinit(mutatorHelper);
     return 0;
 }

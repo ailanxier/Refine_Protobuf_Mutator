@@ -1,0 +1,177 @@
+param {
+  multiplicativeDepth: 4
+  plaintextModulus: 9321014532014611614
+  batchSize: 8
+  digitSize: 27
+  standardDeviation: 0.0482471921
+  secretKeyDist: SPARSE_TERNARY
+  maxRelinSkDeg: 285923393
+  ksTech: HYBRID
+  scalTech: FLEXIBLEAUTO
+  firstModSize: 53
+  scalingModSize: 50
+  securityLevel: HEStd_NotSet
+  ringDim: 512
+  evalAddCount: 3168023772
+  keySwitchCount: 3109591661
+  multiplicationTechnique: HPSPOVERQLEVELED
+  multiHopModSize: 3671699905
+  PREMode: NOT_SET
+  multipartyMode: FIXED_NOISE_MULTIPARTY
+  noiseEstimate: -0.044215608670823858
+  desiredPrecision: 0.79549020341103538
+  statisticalSecurity: -0.97613673895531694
+  numAdversarialQueries: -0.99726563566791449
+  PRE: true
+  MULTIPARTY: true
+  rotateIndexes: -13627
+}
+evalData {
+  allDataLists {
+    dataList: -0.67522541149297133
+    dataList: 0.052983621490855226
+    dataList: -0.33742808505507782
+    dataList: 0.00031895995774688934
+    dataList: 0.20774777272123446
+  }
+  allDataLists {
+    dataList: -0.67522541149297133
+    dataList: -0.61555204875952163
+    dataList: -0.33742808505507782
+    dataList: 0.00031895995774688934
+    dataList: 0.20774777272123446
+  }
+  allDataLists {
+    dataList: 0.51554750560480245
+    dataList: -0.22774539318966636
+    dataList: -0.069140685194505891
+    dataList: -0.069140685194505891
+    dataList: -0.35769614991244147
+    dataList: -0.37627041742861655
+    dataList: -0.21099651281769427
+    dataList: -0.72175063503843118
+  }
+  allDataLists {
+    dataList: 0.37151998862918267
+    dataList: 0.23885903805568987
+    dataList: -0.35949431537761434
+    dataList: 0.7927766754946961
+    dataList: -0.80083519460939911
+    dataList: -0.71857241536611138
+    dataList: -0.048477248654117289
+    dataList: -0.9243966306797573
+  }
+  allDataLists {
+    dataList: 0.37151998862918267
+    dataList: 0.23885903805568987
+    dataList: -0.35949431537761434
+    dataList: 0.7927766754946961
+    dataList: -0.80083519460939911
+  }
+  allDataLists {
+    dataList: -0.67522541149297133
+    dataList: -0.33767222568007782
+    dataList: 0.00031896740832748627
+    dataList: 0.20774681904691805
+    dataList: 0.820026244461634
+    dataList: 0.31948421442870978
+    dataList: 0.18691924220596245
+    dataList: -0.2007463539624339
+  }
+  allDataLists {
+    dataList: -0.048477248654117289
+    dataList: 0.88117174260706466
+    dataList: -0.71857241536611138
+    dataList: 0.98393838711686321
+    dataList: -0.9243966306797573
+    dataList: 0.64878360313433214
+    dataList: 0.33678685435188305
+    dataList: -0.50316575882137271
+  }
+  allDataLists {
+    dataList: -0.63208058825631686
+    dataList: 0.87173903145995335
+    dataList: 0.052983621490855226
+    dataList: -0.84942435813483586
+    dataList: 0.24208346264499259
+  }
+  allDataLists {
+    dataList: -0.63208058825631686
+    dataList: 0.87173903145995335
+    dataList: 0.052983621490855226
+    dataList: -0.84942435813483586
+    dataList: 0.24208346264499259
+  }
+  allDataLists {
+    dataList: -0.048477248654117289
+    dataList: 0.88117174260706466
+    dataList: -0.71857241536611138
+    dataList: 0.98393838711686321
+    dataList: -0.9243966306797573
+  }
+}
+apiSequence {
+  apiList {
+    subTwoList {
+      src2: 1
+    }
+    dst: 3
+  }
+  apiList {
+    subConstant {
+      src: 7
+      num: -0.84047586830152454
+    }
+    dst: 1
+  }
+  apiList {
+    subConstant {
+      src: 7
+      num: -0.84047586830152454
+    }
+    dst: 1
+  }
+  apiList {
+    mulManyList {
+      srcs: 1
+    }
+  }
+  apiList {
+    mulManyList {
+      srcs: 7
+    }
+    dst: 4
+  }
+  apiList {
+    mulConstant {
+      src: 6
+      num: -0.3682717983484306
+    }
+  }
+  apiList {
+    subTwoList {
+      src1: 5
+      src2: 3
+    }
+    dst: 8
+  }
+  apiList {
+    mulManyList {
+      srcs: 5
+    }
+    dst: 4
+  }
+  apiList {
+    subTwoList {
+      src2: 1
+    }
+    dst: 3
+  }
+  apiList {
+    subConstant {
+      src: 7
+      num: -0.84047586830152454
+    }
+    dst: 1
+  }
+}
