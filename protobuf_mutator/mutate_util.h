@@ -1,5 +1,4 @@
-#ifndef SRC_MUTATE_UTIL_H_
-#define SRC_MUTATE_UTIL_H_
+#pragma once
 
 #include "proto_util.h"
 namespace protobuf_mutator {
@@ -66,7 +65,7 @@ namespace protobuf_mutator {
     }
 
     inline void flipBit(size_t size, uint8_t* bytes) {
-        size_t bit = GetRandomIndex(size * 8);
+        size_t bit = GetRandomIndex(size * 8 - 1);
         bytes[bit / 8] ^= (1u << (bit % 8));
     }
 
@@ -116,5 +115,4 @@ namespace protobuf_mutator {
     void CrossoverAddUnsetField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
 }  // namespace protobuf_mutator
 
-#endif  // SRC_MUTATE_UTIL_H_
 

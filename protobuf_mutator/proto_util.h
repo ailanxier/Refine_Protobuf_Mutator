@@ -1,5 +1,4 @@
-#ifndef PROTO_UTIL_H_
-#define PROTO_UTIL_H_
+#pragma once
 
 #include <stddef.h>
 #include <cstdint>
@@ -125,6 +124,3 @@ namespace protobuf_mutator {
     };
 }  // namespace protobuf_mutator
 
-
-// }
-#endif  // SRC_LIBFUZZER_LIBFUZZER_MACRO_H_
