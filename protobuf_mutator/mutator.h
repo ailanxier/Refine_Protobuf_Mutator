@@ -1,5 +1,4 @@
-#ifndef SRC_MUTATOR_H_
-#define SRC_MUTATOR_H_
+#pragma once
 
 #include <unordered_map>
 #include <bitset>
@@ -86,5 +85,3 @@ namespace protobuf_mutator {
         void TryCrossoverField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, CrossoverBitset& allowed_crossovers, int& remain_size);
     };
 }  // namespace protobuf_mutator
-
-#endif  // SRC_MUTATOR_H_

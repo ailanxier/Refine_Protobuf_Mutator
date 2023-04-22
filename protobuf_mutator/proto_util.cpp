@@ -18,7 +18,7 @@ namespace protobuf_mutator {
         GetMutator()->Mutate(message, max_size);
         if (int new_size = output->Write(*message)) {
             // cout<<"mutate:"<<new_size<<" "<<max_size<<endl;
-            assert(new_size <= test_size);
+            // assert(new_size <= test_size);
             GetCache()->Store(output->data(), new_size, message);
             return new_size;
         }
@@ -32,8 +32,7 @@ namespace protobuf_mutator {
         int max_size = output->size(), test_size = max_size;
         GetMutator()->Crossover(message1, message2, max_size);
         if (int new_size = output->Write(*message1)) {
-            // cout<<"cross:"<<new_size<<" "<<max_size<<endl;
-            assert(new_size <= test_size);
+            // assert(new_size <= test_size);
             GetCache()->Store(output->data(), new_size, message1);
             return new_size;
         }
@@ -93,11 +92,8 @@ namespace protobuf_mutator {
 
     int SaveMessageAsBinary(const Message& message, uint8_t* data, int max_size) {
         string result = SaveMessageAsBinary(message);
-        if (result.size() <= max_size) {
-            memcpy(data, result.data(), result.size());
-            return result.size();
-        }
-        return 0;
+        memcpy(data, result.data(), result.size());
+        return result.size();
     }
 
     bool ParseTextMessage(const string& data, Message* output) {
@@ -124,11 +120,8 @@ namespace protobuf_mutator {
 
     int SaveMessageAsText(const Message& message, uint8_t* data, int max_size) {
         string result = SaveMessageAsText(message);
-        if (result.size() <= max_size) {
-            memcpy(data, result.data(), result.size());
-            return result.size();
-        }
-        return 0;
+        memcpy(data, result.data(), result.size());
+        return result.size();
     }
 
 }  // namespace protobuf_mutator

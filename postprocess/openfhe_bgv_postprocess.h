@@ -1,5 +1,5 @@
-#ifndef OPENFHE_CKKS_POSTPROCESS_H_
-#define OPENFHE_CKKS_POSTPROCESS_H_
+#pragma once
+
 #include "post_util.h"
 using namespace OpenFHE;
 
@@ -15,19 +15,16 @@ const vector<float> standardDeviation_range         = {0, 10};
 const vector<uint32_t> scalTech_range               = {1, 3};
 const vector<uint32_t> firstModSize_range           = {40, 60};
 const vector<uint32_t> scalingModSize_range         = {40, 59};
-const int rotateIndexed_maxNum                      = 1;
-vector<int32_t> evalData_range(2);
-const vector<uint32_t> ringDimValue                 = {8192, 16384, 32768};
-const uint32_t maxRingDimExp                        = 15;
 const uint32_t  maxPlaintextModulus                 = 1e5;
 const vector<uint32_t> evalAddCount_range           = {0, 20};
 const vector<uint32_t> keySwitchCount_range         = {0, (int)1e4};
 const vector<uint32_t> multiHopModSize_range        = {0, 60};
 uint32_t maxDataLen                                 = 0;
-// const vector<uint32_t> numLargeDigits_range         = {0, 3};
-// const vector<uint32_t> securityLevel_range = {0, 1};
-// const uint32_t custom_maxRingDim                    = 4096;
-// const vector<int32_t> rotateIndex_range             = {(int)-2e4, (int)2e4};
+const uint32_t maxRingDimExp                        = 15;
+const uint32_t maxDataNum                           = 10;
+const uint32_t maxAPINum                            = 10;
+const int maxRotateIndexedNum                       = 1;
+// const vector<uint32_t> ringDimValue                 = {8192, 16384, 32768};
 
 /**
  * @brief: Prior to testing OpenFHE's CKKS scheme, post-processing is applied to the input protobufs to 
@@ -38,13 +35,13 @@ uint32_t maxDataLen                                 = 0;
  */
 int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     auto param = msg.mutable_param();
-    dataNum = msg.evaldata().alldatalists_size();
+    auto multiplicativeDepth = 1;
+    
 // ======================== postprocess parameter ========================
     if(param->has_multiplicativedepth()){
-        auto depth = param->multiplicativedepth();
-        param->set_multiplicativedepth(clampToRange(depth, multiplicativeDepth_range));
+        multiplicativeDepth = clampToRange(param->multiplicativedepth(), multiplicativeDepth_range);
+        param->set_multiplicativedepth(multiplicativeDepth);
     }
-
     // INVALID_KS_TECH will throw exception
     if(param->has_kstech() && param->kstech() == KeySwitchTechnique::INVALID_KS_TECH)
         param->set_kstech((KeySwitchTechnique)GetRandomNum(ksTech_range[0], ksTech_range[1]));
@@ -57,19 +54,18 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     if(param->has_premode() && param->premode() == ProxyReEncryptionMode::DIVIDE_AND_ROUND_HRA)
         param->set_premode((ProxyReEncryptionMode)GetRandomNum(preMode_range[0], preMode_range[1]));
     // TEST: !!! EncryptionTechnique = EXTENDED && PREMode = NOT_SET => crash (to be confirmed)
-    if((!param->has_premode() || param->premode() == ProxyReEncryptionMode::NOT_SET) && 
-                    param->encryptiontechnique() == EncryptionTechnique::EXTENDED)
+    if((param->premode() == ProxyReEncryptionMode::NOT_SET) && 
+        param->encryptiontechnique() == EncryptionTechnique::EXTENDED)
         param->set_premode((ProxyReEncryptionMode)GetRandomNum(1, preMode_range[1]));
 
     // PREMode = NOISE_FLOODING_HRA && KeySwitching = HIBIRD => digitSize = 0
     if(param->kstech() == KeySwitchTechnique::HYBRID && param->premode() == ProxyReEncryptionMode::NOISE_FLOODING_HRA)
         param->set_digitsize(0);
     else {
-        auto depth = param->has_multiplicativedepth() ? param->multiplicativedepth() : 1;
         // TEST: set a larger digitSize for efficiency
         if(param->has_multipartymode() && param->multipartymode() == MultipartyMode::NOISE_FLOODING_MULTIPARTY)
             param->set_digitsize(clampToRange(param->digitsize(), smaller_digitSize_range));
-        else if(depth == multiplicativeDepth_range[1]) 
+        else if(multiplicativeDepth == multiplicativeDepth_range[1]) 
             param->set_digitsize(clampToRange(param->digitsize(), larger_digitSize_range));
         else
             param->set_digitsize(clampToRange(param->digitsize(), digitSize_range));
@@ -88,30 +84,36 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     // TEST:
     param->set_numlargedigits(0);
 
-    // TEST: securitylevel and ringDim is to be confirmed
-    maxDataLen = 0;
+    // if no data list, set a random data list with length of MAX_NEW_REPEATED_SIZE
+    maxDataLen = msg.evaldata().alldatalists_size() == 0 ? MAX_NEW_REPEATED_SIZE : 1;
     for(auto& data : msg.evaldata().alldatalists()) maxDataLen = max(maxDataLen, (uint32_t)data.datalist_size());
+    // TEST: securitylevel and ringDim is to be confirmed
     // since rotation is on ringDim / 2, ringDim should be at least 2 * maxDataLen
     auto ringDim = param->ringdim();
-    if(ringDim > (1 << maxRingDimExp) || ringDim == 0 || (ringDim & (ringDim - 1)) != 0)
-        ringDim = (1 << GetRandomNum(levelUpToPowerOfTwo(maxDataLen * 2), maxRingDimExp));
+    auto minRingDimExp = levelUpToPowerOfTwo(maxDataLen * 2);
+    if(ringDim < (1 << minRingDimExp) || ringDim > (1 << maxRingDimExp) || ringDim == 0 || (ringDim & (ringDim - 1)) != 0)
+        ringDim = (1 << GetRandomNum(minRingDimExp, maxRingDimExp));
     // TEST: To introduce a small variance to ringDim
-    if(GetRandomIndex(1000) == 0) ringDim += GetRandomNum(-2, 2);
-    if(param->securitylevel() == HEStd_NotSet)
-        param->set_ringdim(ringDim);
-    else {
-        param->set_ringdim(0);
-        // Since ringDim can't be 
-        ringDim = ringDimValue[GetRandomIndex(ringDimValue.size() - 1)];
-    }
+    if(GetRandomIndex(2000) == 0) ringDim += GetRandomNum(-2, 2);
+    // TEST: manually set ringDim
+    param->set_ringdim(ringDim);
+    param->set_securitylevel(SecurityLevel::HEStd_NotSet);    
+    // if(param->securitylevel() == HEStd_NotSet)
+    //     param->set_ringdim(ringDim);
+    // else {
+    //     param->set_ringdim(0);
+    //     // Since ringDim can't be 
+    //     ringDim = ringDimValue[GetRandomIndex(ringDimValue.size() - 1)];
+    // }
     if(param->has_batchsize()){
         //  Only be set to zero or a power of two.
         auto size = param->batchsize();
-        vector<uint32_t> temp_range = {maxDataLen, min(max(maxDataLen, batchSize_range[1]), ringDim)};
+        vector<uint32_t> temp_range = {(uint32_t)1 << levelUpToPowerOfTwo(maxDataLen), 
+                                        (uint32_t)1 << levelUpToPowerOfTwo(reduceToPowerOfTwo(ringDim))};
         size = clampToRange(size, temp_range);
         if(GetRandomIndex(3) == 0)  size = 0;
         param->set_batchsize(reduceToPowerOfTwo(size));
-    }
+    }  
     // TEST: plaintextModulus(P) must comply with (P-1)/m is an integer, where m is (cyclotomic = 2 * ringDim)
     auto cyclotomic = 2 * ringDim;
     auto plaintextModulus = param->plaintextmodulus();
@@ -123,41 +125,18 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
                 temp_ptm.push_back(plaintextModulus);
             plaintextModulus += cyclotomic;
         }
-        plaintextModulus = temp_ptm[GetRandomIndex(temp_ptm.size() - 1)];
+        // TEST: do not found a valid plaintextModulus
+        if(temp_ptm.size() == 0) plaintextModulus = GetRandomNum(cyclotomic + 1, maxPlaintextModulus);
+        else
+            plaintextModulus = temp_ptm[GetRandomIndex(temp_ptm.size() - 1)];
     }
     // TEST: To introduce a small variance to plaintextModulus
-    if(GetRandomIndex(700) == 0) plaintextModulus += GetRandomNum(-1, 1);
+    if(GetRandomIndex(500) == 0) plaintextModulus += GetRandomNum(-1, 1);
     param->set_plaintextmodulus(plaintextModulus);
-    // TEST: to be checked 
+
+    vector<int32_t> evalData_range(2);
     evalData_range[0] = -(int)plaintextModulus;
     evalData_range[1] = plaintextModulus;
-
-    // RotateIndexes: clamp the index and src here, then add unset index
-    map<int, bool> indexMap;
-    auto apiList = msg.mutable_apisequence()->mutable_apilist();
-    for(auto& api : *apiList) {
-        if(api.has_rotateonelist()) {
-            auto index = api.rotateonelist().index();
-            auto src = apiSrcAndDstClampToRange(api.mutable_rotateonelist()->src());
-            api.mutable_rotateonelist()->set_src(src);
-            auto len = msg.evaldata().alldatalists()[src].datalist_size();
-            // TEST: index is in range [-len, len]
-            index = clampToRange(index, {-len, len});
-            api.mutable_rotateonelist()->set_index(index);
-            indexMap[index] = true;
-        }
-    }
-    // TEST: random delete repeated field to satisfy the size limit
-    while(param->rotateindexes_size() > rotateIndexed_maxNum)
-        param->mutable_rotateindexes()->RemoveLast();
-    for(auto& index : *param->mutable_rotateindexes()){
-        index = clampToRange(index, {-(int)ringDim / 2, (int)ringDim / 2});
-        if(indexMap.find(index) != indexMap.end())
-            indexMap[index] = false;
-    }
-    for(auto& index : indexMap)
-        if(index.second && GetRandomIndex(700))
-            param->add_rotateindexes(index.first);
 
     if(param->has_evaladdcount())
         param->set_evaladdcount(clampToRange(param->evaladdcount(), evalAddCount_range));
@@ -166,7 +145,15 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     param->set_multihopmodsize(clampToRange(param->multihopmodsize(), multiHopModSize_range));
 
 // ======================== Postprocess EvalData ========================   
+    // TEST: reduce the number of data to be evaluated for efficiency
     auto evalData = msg.mutable_evaldata()->mutable_alldatalists();
+    while(evalData->size() > maxDataNum){
+        int tmp = MAX_BINARY_INPUT_SIZE;
+        auto field = msg.evaldata().GetDescriptor()->FindFieldByName("allDataLists");
+        DeleteRepeatedField(msg.mutable_evaldata(), field, tmp);
+    }
+    dataNum = max(1, msg.evaldata().alldatalists_size());    
+    // at least one data list
     for(auto& dataList : *evalData){
         for(auto& data : *dataList.mutable_datalist())
             data = clampToRange(data, evalData_range);
@@ -181,6 +168,38 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     }
 
 // ======================== Postprocess APISequence ========================  
+    // RotateIndexes: clamp the index and src here, then add unset index
+    map<int, bool> indexMap;
+    auto apiList = msg.mutable_apisequence()->mutable_apilist();
+    while(apiList->size() > maxAPINum){
+        int tmp = MAX_BINARY_INPUT_SIZE;
+        auto field = msg.apisequence().GetDescriptor()->FindFieldByName("apiList");
+        DeleteRepeatedField(msg.mutable_apisequence(), field, tmp);
+    }
+    for(auto& api : *apiList) {
+        if(api.has_rotateonelist()) {
+            auto index = api.rotateonelist().index();
+            auto src = apiSrcAndDstClampToRange(api.mutable_rotateonelist()->src());
+            api.mutable_rotateonelist()->set_src(src);
+            auto len = msg.evaldata().alldatalists()[src].datalist_size();
+            // TEST: index is in range [-len, len]
+            index = clampToRange(index, {-len, len});
+            api.mutable_rotateonelist()->set_index(index);
+            indexMap[index] = true;
+        }
+    }
+    // TEST: random delete repeated field to satisfy the size limit
+    while(param->rotateindexes_size() > maxRotateIndexedNum)
+        param->mutable_rotateindexes()->RemoveLast();
+    for(auto& index : *param->mutable_rotateindexes()){
+        index = clampToRange(index, {-(int)ringDim / 2, (int)ringDim / 2});
+        if(indexMap.find(index) != indexMap.end())
+            indexMap[index] = false;
+    }
+    // XXX: have probability to not set index
+    for(auto& index : indexMap)
+        if(index.second && GetRandomIndex(2000))
+            param->add_rotateindexes(index.first);
     for(auto & api : *apiList){
         auto dst = api.dst();
         api.set_dst(apiSrcAndDstClampToRange(dst));
@@ -199,6 +218,10 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
             api.mutable_multwolist()->set_src1(apiSrcAndDstClampToRange(api.mutable_multwolist()->src1()));
             api.mutable_multwolist()->set_src2(apiSrcAndDstClampToRange(api.mutable_multwolist()->src2())); 
         }else if(api.has_mulmanylist()){
+              // XXX: Since mulmanylist always cause segfault, we only use it in MaxMultiplicativeDepth
+            if(multiplicativeDepth != multiplicativeDepth_range[1])
+                while(api.mutable_mulmanylist()->srcs_size() > 0)
+                    api.mutable_mulmanylist()->mutable_srcs()->RemoveLast();
             for(auto& src : *api.mutable_mulmanylist()->mutable_srcs())
                 src = apiSrcAndDstClampToRange(src);
             if(api.mulmanylist().srcs_size() == 0)
@@ -220,5 +243,3 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     *out_buf = (unsigned char *)temp;
     return buffer.size();
 }
-
-#endif

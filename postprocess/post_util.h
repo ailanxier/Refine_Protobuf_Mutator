@@ -1,5 +1,4 @@
-#ifndef POST_UTIL_H
-#define POST_UTIL_H
+#pragma once
 
 #include "protobuf_mutator/mutator.h"
 #include "proto/proto_setting.h"
@@ -110,4 +109,3 @@ bool Miller_Rabin(uint64_t num){
     }
     return true;
 }
-#endif

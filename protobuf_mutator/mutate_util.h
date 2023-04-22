@@ -1,5 +1,4 @@
-#ifndef SRC_MUTATE_UTIL_H_
-#define SRC_MUTATE_UTIL_H_
+#pragma once
 
 #include "proto_util.h"
 namespace protobuf_mutator {
@@ -37,7 +36,9 @@ namespace protobuf_mutator {
     template <typename T>
     inline typename std::enable_if<std::is_integral<T>::value, T>::type 
     GetRandomNum(T mi, T ma){
-        assert(mi <= ma);
+        // assert(mi <= ma);
+        // do not use assert to avoid stopping fuzzing
+        if(mi > ma) return mi;
         std::uniform_int_distribution<T> distribution(mi, ma);
         return distribution(getRandEngine()->randLongEngine);
     }
@@ -45,7 +46,8 @@ namespace protobuf_mutator {
     template <typename T>
     inline typename std::enable_if<std::is_floating_point<T>::value, T>::type 
     GetRandomNum(T mi, T ma){
-        assert(mi <= ma);
+        // assert(mi <= ma);
+        if(mi > ma) return mi;
         std::uniform_real_distribution<T> distribution(mi, ma);
         return distribution(getRandEngine()->randomDoubleEngine);
     }
@@ -56,13 +58,14 @@ namespace protobuf_mutator {
     template <typename T>
     inline typename std::enable_if<std::is_integral<T>::value, T>::type
     GetRandomIndex(T ma){
-        assert(ma >= 0);
+        // assert(ma >= 0);
+        if(ma < 0) return 0;
         std::uniform_int_distribution<T> distribution(0, ma);
         return distribution(getRandEngine()->randLongEngine);
     }
 
     inline void flipBit(size_t size, uint8_t* bytes) {
-        size_t bit = GetRandomIndex(size * 8);
+        size_t bit = GetRandomIndex(size * 8 - 1);
         bytes[bit / 8] ^= (1u << (bit % 8));
     }
 
@@ -111,6 +114,3 @@ namespace protobuf_mutator {
     // Add some new simple fields from message2 to the corresponding unset fields in message1.
     void CrossoverAddUnsetField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
 }  // namespace protobuf_mutator
-
-#endif  // SRC_MUTATE_UTIL_H_
-

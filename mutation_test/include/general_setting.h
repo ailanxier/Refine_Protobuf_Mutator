@@ -1,5 +1,4 @@
-#ifndef GENERAL_SETTING_H
-#define GENERAL_SETTING_H
+#pragma once
 // #include "fhe.pb.h"
 #define NO_STAR_LINE 0
 #define AFL_CRASH_CODE 111
@@ -11,5 +10,3 @@ using std::vector;
 using std::string;
 
 constexpr double EPSILON = 0.00000001;
-
-#endif
