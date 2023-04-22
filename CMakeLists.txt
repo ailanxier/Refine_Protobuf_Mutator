@@ -51,7 +51,8 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 message("PROTOBUF_INCLUDE_DIRS: ${PROTOBUF_INCLUDE_DIRS}")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
+# add_compile_options(-fsanitize=address -g)
+# link_libraries(asan)
 # ===================== OPENFHE-CKKS =====================
 set(CUSTOM_MUTATOR_NAME "openfhe_ckks_protobuf_mutator")
 add_subdirectory(protobuf_mutator)

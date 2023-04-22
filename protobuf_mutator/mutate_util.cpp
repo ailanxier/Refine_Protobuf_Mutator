@@ -536,6 +536,7 @@ namespace protobuf_mutator {
                     ref1->MutableRepeatedMessage(msg1, field1, idx1[i])->CopyFrom(ref2->GetRepeatedMessage(*msg2, field2, idx2));
                     if(max_size < GetMessageSize(msg1))
                         ref1->MutableRepeatedMessage(msg1, field1, idx1[i])->CopyFrom(*temp);
+                    delete temp;
                     break;
                 }
                 case FieldDescriptor::CPPTYPE_STRING:

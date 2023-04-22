@@ -1,13 +1,13 @@
 #include "postprocess/postprocess.h"
 #include "proto/proto_setting.h"
 #include "mutation_test/include/util.h"
-
+#include <dirent.h>
 using namespace std;
 using namespace google::protobuf;
 using namespace protobuf_mutator;
 
 #define SEED_NUM 4
-#define MUTATION_TIMES 1000
+#define MUTATION_TIMES 4000
 char temp[MAX_BUFFER_SIZE];
 int main(int argc, char *argv[]){
     auto read_file_from_path = [&](const string& path) {
@@ -65,8 +65,13 @@ int main(int argc, char *argv[]){
         out << textData;
         out.close();
     }else{
-        for(int i = 0;i < SEED_NUM;i++){
-            string data = read_file_from_path(text_seed_path + ToStr(i) + ".txt");
+        string folder_path = text_seed_path;
+        DIR* dirp = opendir(folder_path.c_str());
+        struct dirent * dp;
+        while ((dp = readdir(dirp)) != NULL) {
+            if(dp->d_name[0] == '.') continue;
+            std::string file_path = folder_path + "/" + dp->d_name;
+            string data = read_file_from_path(file_path);
             if(!LoadProtoInput(false, (const uint8_t *)data.c_str(), data.size(), &msg))
                 ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
             
@@ -82,12 +87,13 @@ int main(int argc, char *argv[]){
             // print_words({"-------------------", "original message", ToStr(i), "-------------------"}, 3, NO_STAR_LINE);
             // msg.PrintDebugString();
 
-            ofstream out(bin_seed_path + ToStr(i) + ".txt");
+            ofstream out(bin_seed_path + (string)dp->d_name);
             // data = msg.DebugString();
             // out<<data;
             msg.SerializeToOstream(&out);
             out.close();
         }
+        closedir(dirp);
     }
     return 0;
 }

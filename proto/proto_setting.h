@@ -1,5 +1,4 @@
-#ifndef PROTO_SETTING_H
-#define PROTO_SETTING_H
+#pragma once
 
 #include "openfhe_ckks.pb.h"
 using Root = OpenFHE::OpenFHE_RootMsg;
@@ -10,6 +9,3 @@ using Root = OpenFHE::OpenFHE_RootMsg;
 const std::string afl_seed_path = "/root/Refine_Protobuf_Mutator/proto_seed/afl_text_in/openfhe_ckks/";
 const std::string text_seed_path = "/root/Refine_Protobuf_Mutator/proto_seed/in/";
 const std::string bin_seed_path = "/root/Refine_Protobuf_Mutator/proto_seed/bin/";
-
-
-#endif

@@ -1,8 +1,6 @@
-#ifndef FHE_PROTOBUF_MUTATOR_H_
-#define FHE_PROTOBUF_MUTATOR_H_
+#pragma once
 
 #include <fstream>
-#include <tuple>
 #include "openfhe_ckks_postprocess.h"
 
 // #define INITIAL_SIZE (500)
@@ -12,10 +10,10 @@
 // Embedding buf_ in class MutateHelper here to prevent memory fragmentation caused by frequent memory allocation.
 class AFLCustomHepler {
 public: 
-    AFLCustomHepler(int s){
-        buf_  = static_cast<uint8_t*>(calloc(1, MAX_BINARY_INPUT_SIZE));
+    AFLCustomHepler(){
+        buf_  = static_cast<uint8_t*>(calloc(1, MAX_BUFFER_SIZE));
         if(!buf_) perror("MutateHelper init");
-        temp = new char[MAX_BINARY_INPUT_SIZE];
+        temp = new char[MAX_BUFFER_SIZE];
     }
     ~AFLCustomHepler(){
         free(buf_);
@@ -35,7 +33,7 @@ int MutationOrCrossoverOnProtobuf(AFLCustomHepler *m, bool binary, unsigned char
 
 extern "C"{
     AFLCustomHepler *afl_custom_init(void *afl, unsigned int s){                                              
-        AFLCustomHepler *mutate_helper = new AFLCustomHepler(s);                                                 
+        AFLCustomHepler *mutate_helper = new AFLCustomHepler();                                                 
         std::ofstream seed_of("seed.txt", std::ios::trunc); 
         if(USE_SEED)                                                                      
             s = USE_SEED;     
@@ -63,5 +61,4 @@ extern "C"{
             return PostProcessMessage(input, out_buf, m->temp);                                                      
         return 0;                                                                                                       
     }
-}                                                                 
-#endif
+}          

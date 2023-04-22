@@ -1,6 +1,4 @@
-#ifndef UTIL_COUT_H
-#define UTIL_COUT_H
-
+#pragma once
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -93,5 +91,3 @@ template<typename T>
 inline typename std::enable_if<std::is_arithmetic_v<T>, void>::type print(T number, int highlight_pos = 1, bool segment_flag = true){
     print_words({ToStr(number)}, highlight_pos, segment_flag);
 }
-
-#endif

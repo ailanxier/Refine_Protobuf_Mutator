@@ -1,5 +1,4 @@
-#ifndef SRC_MUTATOR_H_
-#define SRC_MUTATOR_H_
+#pragma once
 
 #include <unordered_map>
 #include <bitset>
@@ -87,4 +86,3 @@ namespace protobuf_mutator {
     };
 }  // namespace protobuf_mutator
 
-#endif  // SRC_MUTATOR_H_
