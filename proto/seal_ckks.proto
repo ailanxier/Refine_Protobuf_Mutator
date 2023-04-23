@@ -1,0 +1,173 @@
+syntax = "proto3";
+package SEAL;
+
+message SEAL_RootMsg {
+    FHEParameter param          = 1;
+    EvalData evalData           = 2;
+    APISequence apiSequence     = 3;
+}
+
+message FHEParameter {
+    /*
+    Range:
+    Detail:
+        1.The polynomial modulus directly affects the number of coefficients in
+        plaintext polynomials, the size of ciphertext elements, the computational
+        performance of the scheme (bigger is worse), and the security level (bigger
+        is better). 
+        2. must be a power of 2 (e.g. 1024, 2048, 4096, 8192, 16384, or 32768) and non-zero
+    */
+    uint64 poly_modulus_degree = 1;
+    /*
+    Range:
+    Detail:
+        1. The coefficient modulus consists of a list of distinct prime numbers, 
+        and is represented by a vector of Modulus objects. 
+        2. The coefficient modulus directly affects the size of ciphertext elements, 
+        the amount of computation that the scheme can perform (bigger is better), 
+        and the security level (bigger is worse). 
+        3.In Microsoft SEAL each of the prime numbers in the coefficient modulus must
+        be at most 60 bits, and must be congruent to 1 modulo 2*poly_modulus_degree
+        4. Good choice: 
+         *   Choose a 60-bit prime as the first prime in coeff_modulus. This will give the highest precision when decrypting
+         *   Choose another 60-bit prime as the last element of coeff_modulus, should be as large as the largest of the other primes
+         *   Choose the intermediate primes to be close to each other.
+        5. Sum <= CoeffModulus::MaxBitCount(poly_modulus_degree)
+
+    */
+    repeated uint64 coeff_modulus = 2;
+    /*
+    Range: [2, 60] (TEST)
+    Detail:
+        1. The bit-lengths of the primes to be generated
+        2. Used in CoeffModulus::Create(poly_modulus_degree, bit_sizes) for coeff_modulus
+    */
+    repeated int32 bit_sizes = 3;
+    // Determines whether the modulus switching chain should be created
+    optional bool expand_mod_chain = 4;
+    enum sec_level_type{
+        none = 0;
+        tc128 = 1;
+        tc192 = 2;
+        tc256 = 3;
+    };
+    /*
+    Range: none, tc128, tc192, tc256
+    Default: tc128
+    */
+    optional sec_level_type sec_level = 5; 
+}
+
+message EvalData {
+    message OneDataList {
+        repeated double dataList                  = 1;
+    }
+    repeated OneDataList allDataLists             = 2;
+}
+
+message APISequence {
+    message OneAPI {
+        message AddTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message AddConstant {
+            uint32 src                            = 1;
+            double num                            = 2;
+        }
+        message AddManyList {
+            repeated uint32 srcs                  = 1;
+        }
+        message SubTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message SubConstant {
+            uint32 src                            = 1;
+            double num                            = 2;
+        }
+        message MulTwoList {
+            uint32 src1                           = 1;
+            uint32 src2                           = 2;
+        }
+        message MulConstant {
+            uint32 src                            = 1;
+            double num                            = 2;
+        }
+        message MulManyList {
+            repeated uint32 srcs                  = 1;
+        }
+        // only for CKKS
+        message LinearWeightedSum {
+            repeated uint32 srcs                  = 1;
+            repeated double weights               = 2;
+        }
+        message RotateOneList {
+            uint32 src                            = 1;
+            int32 index                           = 2;
+        }    
+        oneof api{
+            AddTwoList addTwoList                 = 1;
+            AddConstant addConstant               = 2;
+            AddManyList addManyList               = 3;
+            SubTwoList subTwoList                 = 4;
+            SubConstant subConstant               = 5;
+            MulTwoList mulTwoList                 = 6;
+            MulConstant mulConstant               = 7;
+            MulManyList mulManyList               = 8;
+            LinearWeightedSum linearWeightedSum   = 9;
+            RotateOneList rotateOneList           = 10;
+        }
+        uint32 dst                                = 11;
+        // strictly call rescale() in FIXEDMANUAL mode
+        // bool rescale                              = 12;
+    }
+    repeated OneAPI apiList                       = 1;
+}
+
+/* 
+    * Bootstrapping: 
+    * not support for BGV and Serialization
+    * The goal of bootstrapping is to increase the number of available levels we have, or in other words,
+    * to dynamically increase the multiplicative depth. However, the bootstrapping procedure itself
+    * needs to consume a few levels to run. We compute the number of bootstrapping levels required
+    * using GetBootstrapDepth, and add it to levelsUsedBeforeBootstrap to set our initial multiplicative depth.
+    *
+    * We set a budget for the number of levels we can consume in bootstrapping for encoding and decoding, respectively.
+    * Using larger numbers of levels reduces the complexity and number of rotation keys,
+    * but increases the depth required for bootstrapping.
+    * We must choose values smaller than ceil(log2(slots)). A level budget of {4, 4} is good for higher ring
+    * dimensions (65536 and higher).
+    */
+    /* 
+* We give the user the option of configuring values for an optimization algorithm in bootstrapping.
+* Here, we specify the giant step for the baby-step-giant-step algorithm in linear transforms
+* for encoding and decoding, respectively. Either choose this to be a power of 2 or an exact divisor 
+* of the number of slots. Setting {0, 0} allows OpenFHE to choose the values automatically.
+*/
+// uint32                             bsgsDim1                  = 35;
+// uint32                             bsgsDim2                  = 36;
+//  uint32                             levelBudget1              = 40;
+//  uint32                             levelBudget2              = 41;
+
+//  // approximate the number of levels bootstrapping will consume to help set initial multiplicative depth.
+//  uint32                             approxBootstrapDepth      = 42;
+    // // for the ProxyReEncryptionMode = INDCPA^D scenario
+    // ExecutionMode                       executionMode             = 22;
+    // // for ExecutionMode = NOISE_FLOODING_DECRYPT
+    // DecryptionNoiseMode                 decryptionNoiseMode       = 23;
+    // // This estimate is obtained from running the computation in EXEC_NOISE_ESTIMATION mode. 
+    // // It is only used in NOISE_FLOODING_DECRYPT mode
+    // double                              noiseEstimate             = 24;
+    // ignore for 64-bit CKKS (only for 128-bit CKKS)
+    // optional double                     desiredPrecision          = 25;
+    /*
+     * for CKKS in NOISE_FLOODING_DECRYPT mode. This is the bound on the probability of success
+     * that any adversary can have. Specifically, a probability of success of at most 2^(-statisticalSecurity).
+     * default value is 30
+     */
+    // optional double                     statisticalSecurity       = 26;
+    /* 
+     * Number of adversarial queries a user is expecting for their application in NOISE_FLOODING_DECRYPT mode.
+     */
+    // optional double                     numAdversarialQueries     = 27;
