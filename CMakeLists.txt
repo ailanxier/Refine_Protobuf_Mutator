@@ -54,12 +54,13 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # add_compile_options(-fsanitize=address -g)
 # link_libraries(asan)
 # ===================== OPENFHE-CKKS =====================
-set(CUSTOM_MUTATOR_NAME "openfhe_ckks_protobuf_mutator")
+set(CUSTOM_MUTATOR_NAME "RPM_openfhe_ckks")
 add_subdirectory(protobuf_mutator)
 add_subdirectory(postprocess)
 add_subdirectory(mutation_test)
 add_subdirectory(proto_seed)
 link_libraries(protobuf)
+
 
 
 

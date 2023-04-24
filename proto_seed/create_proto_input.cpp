@@ -2,9 +2,7 @@
 #include "proto/proto_setting.h"
 #include "mutation_test/include/util.h"
 #include <dirent.h>
-using namespace std;
 using namespace google::protobuf;
-using namespace protobuf_mutator;
 
 #define SEED_NUM 4
 #define MUTATION_TIMES 4000
@@ -16,11 +14,11 @@ int main(int argc, char *argv[]){
         buf << input.rdbuf(); 
         return buf.str(); 
     };
-    Root msg, add_msg;
     random_device rd;
     uint seed = rd();
     AFLCustomHepler* mutatorHelper = afl_custom_init(nullptr, seed);
     if(argv[1][0] == 'c'){
+        Root msg, add_msg;
         for(int i = 0;i < SEED_NUM;i++){
             int remain_size = MAX_BINARY_INPUT_SIZE;
             print_words({"-------------------", "original message", ToStr(i), "-------------------"}, 3, NO_STAR_LINE);
@@ -55,6 +53,7 @@ int main(int argc, char *argv[]){
         }
         print_words({"create randomEngine seed:", ToStr(seed)},2);
     }else if(argv[1][0] == 'r'){
+        Root msg;
         string data = read_file_from_path(argv[2]);
         if(!LoadProtoInput(true, (const uint8_t *)data.c_str(), data.size(), &msg))
             ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
@@ -64,7 +63,8 @@ int main(int argc, char *argv[]){
         string textData = msg.DebugString();
         out << textData;
         out.close();
-    }else{
+    }else if(argv[1][0] == '1'){
+        Root msg;
         string folder_path = text_seed_path;
         DIR* dirp = opendir(folder_path.c_str());
         struct dirent * dp;

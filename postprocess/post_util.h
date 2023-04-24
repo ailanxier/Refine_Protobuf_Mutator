@@ -13,7 +13,7 @@ inline typename std::enable_if<std::is_integral<T>::value, T>::type
 clampToRange(const T value, const vector<T>& range) {
     // assert(range[0] <= range[1]);
     // TEST: do not use assert to avoid stopping fuzzing
-    if(range[0] > range[1]) return range[0];
+    if(range[0] >= range[1]) return range[0];
     if(range[0] <= value && value <= range[1])
         return value;
     T len = range[1] - range[0] + 1;
@@ -25,7 +25,7 @@ template<typename T>
 inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
 clampToRange(const T value, const vector<T>& range) {
     // TEST: do not use assert to avoid stopping fuzzing
-    if(range[0] > range[1]) return range[0];
+    if(range[0] >= range[1] || fabs(range[1] - range[0]) <= 1e-6) return range[0];
     if(range[0] <= value && value <= range[1])
         return value;
     T len = range[1] - range[0];
