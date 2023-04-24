@@ -9,6 +9,12 @@ namespace protobuf_mutator {
         float MutateFloat(float value) { return flipBit(value); }
         double MutateDouble(double value) { return flipBit(value); }
         bool MutateBool(bool value) { return !value; }
+        string MutateString(string value) {
+            int len = value.size();
+            for(int i = 0;i < len;i++)
+                if(CanMutateBit()) value[i] = flipBit(value[i]);
+            return value;
+        }
         
         template <class T, class F>
         void RepeatMutate(T* value, F mutate){
@@ -25,6 +31,7 @@ namespace protobuf_mutator {
         void mutate(float* value) { RepeatMutate(value, std::bind(MutateFloat, _1)); }
         void mutate(double* value) { RepeatMutate(value, std::bind(MutateDouble, _1)); }
         void mutate(bool* value) { RepeatMutate(value, std::bind(MutateBool, _1)); }
+        void mutate(string* value) { RepeatMutate(value, std::bind(MutateString, _1)); }
     }
 
     RandomEngine* getRandEngine(){
@@ -96,9 +103,13 @@ namespace protobuf_mutator {
                     createRandomMessage(newMsg, msg_max_size);
                     break;
                 }
-                case FieldDescriptor::CPPTYPE_STRING:
-                    // not support
+                case FieldDescriptor::CPPTYPE_STRING:{
+                    string newStr;
+                    for(int i = 0;i < MAX_NEW_REPEATED_SIZE;i++)
+                        newStr += (char)GetRandomNum(0, 255);
+                    ref->AddString(msg, field, newStr);
                     break;
+                }
             }
             // check size
             remain_size = max_size - GetMessageSize(msg);
@@ -156,9 +167,13 @@ namespace protobuf_mutator {
                 int msg_max_size = max_size - GetMessageSize(msg);
                 createRandomMessage(newMsg, msg_max_size);
                 break;
-            }case FieldDescriptor::CPPTYPE_STRING:
-                // not support
+            }case FieldDescriptor::CPPTYPE_STRING:{
+                string newStr;
+                for(int i = 0;i < MAX_NEW_REPEATED_SIZE;i++)
+                    newStr += (char)GetRandomNum(0, 255);
+                ref->SetString(msg, field, newStr);
                 break;
+            }
         }
         // check size
         remain_size = max_size - GetMessageSize(msg);
@@ -275,8 +290,8 @@ namespace protobuf_mutator {
                     auto now = ref->GetRepeatedBool(*msg, field, i);
                     auto temp = now;
                     mutate(&now);
-                    ref->SetRepeatedInt32(msg, field, i, now);
-                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedInt32(msg, field, i, temp);
+                    ref->SetRepeatedBool(msg, field, i, now);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedBool(msg, field, i, temp);
                 }
                 break;
             case FieldDescriptor::CPPTYPE_ENUM:
@@ -291,9 +306,18 @@ namespace protobuf_mutator {
                 }              
                 break;
             case FieldDescriptor::CPPTYPE_MESSAGE:
-            case FieldDescriptor::CPPTYPE_STRING:
-                // not support
                 break;
+            case FieldDescriptor::CPPTYPE_STRING:{
+                for(int i = 0; i < len; i++){
+                    if(!CanMutate()) continue;
+                    auto now = ref->GetRepeatedString(*msg, field, i);
+                    auto temp = now;
+                    mutate(&now);
+                    ref->SetRepeatedString(msg, field, i, now);
+                    if(max_size < GetMessageSize(msg)) ref->SetRepeatedString(msg, field, i, temp);
+                }                
+                break;
+            }
         }
         remain_size = max_size - GetMessageSize(msg);
     }
@@ -380,9 +404,15 @@ namespace protobuf_mutator {
                 break;
             } 
             case FieldDescriptor::CPPTYPE_MESSAGE:
-            case FieldDescriptor::CPPTYPE_STRING:
-                // not support
                 break;
+            case FieldDescriptor::CPPTYPE_STRING:{
+                auto now = ref->GetString(*msg, field);
+                auto temp = now;
+                mutate(&now);
+                ref->SetString(msg, field, now);
+                if(max_size < GetMessageSize(msg)) ref->SetString(msg, field, temp);
+                break;
+            }
         }
         remain_size = max_size - GetMessageSize(msg);
     }
@@ -450,9 +480,14 @@ namespace protobuf_mutator {
                     ref->SwapElements(msg, field, idx1, idx2);
                 }
                 break;
-            } case FieldDescriptor::CPPTYPE_STRING:
-                // not support
+            } case FieldDescriptor::CPPTYPE_STRING:{
+                vector<string> shuffleList(len);
+                for(int i = 0; i < len; i++) shuffleList[i] = ref->GetRepeatedString(*msg, field, i);
+                for(int i = 0; i < len; i++) ref->SetRepeatedString(msg, field, i, shuffleList[i]);
+                shuffle(shuffleList.begin(), shuffleList.end(), getRandEngine()->randLongEngine);
+                for(int i = 0; i < len; i++) ref->SetRepeatedString(msg, field, i, shuffleList[i]);
                 break;
+            }
         }
         // Assume that shuffling the repeated field will not affect its size
         remain_size = max_size - GetMessageSize(msg);
@@ -539,9 +574,13 @@ namespace protobuf_mutator {
                     delete temp;
                     break;
                 }
-                case FieldDescriptor::CPPTYPE_STRING:
-                    // not support
+                case FieldDescriptor::CPPTYPE_STRING:{
+                    auto temp = ref1->GetRepeatedString(*msg1, field1, idx1[i]);
+                    ref1->SetRepeatedString(msg1, field1, idx1[i], ref2->GetRepeatedString(*msg2, field2, idx2));
+                    if(max_size < GetMessageSize(msg1))
+                        ref1->SetRepeatedString(msg1, field1, idx1[i], temp);
                     break;
+                }
             }
             remain_size = max_size - GetMessageSize(msg1);
             
@@ -586,9 +625,10 @@ namespace protobuf_mutator {
             case FieldDescriptor::CPPTYPE_MESSAGE:
                 ref1->MutableMessage(msg1, field1)->CopyFrom(ref2->GetMessage(*msg2, field2));
                 break;
-            case FieldDescriptor::CPPTYPE_STRING:
-                // not support
+            case FieldDescriptor::CPPTYPE_STRING:{
+                ref1->SetString(msg1, field1, ref2->GetString(*msg2, field2));
                 break;
+            }
         }
         // XXX: To avoid dealing with the complex situation of oneof field, 
         // just copy the whole original message to the crossover one in case of exceeding the maximum size
@@ -640,8 +680,8 @@ namespace protobuf_mutator {
                 case FieldDescriptor::CPPTYPE_MESSAGE:
                     ref1->AddMessage(msg1, field1)->CopyFrom(ref2->GetRepeatedMessage(*msg2, field2, idx2[i]));
                     break;
-                case FieldDescriptor::CPPTYPE_STRING:  
-                    // not support
+                case FieldDescriptor::CPPTYPE_STRING:
+                    ref1->AddString(msg1, field1, ref2->GetRepeatedString(*msg2, field2, idx2[i]));
                     break;
             }
             // check size
@@ -691,7 +731,7 @@ namespace protobuf_mutator {
                 ref1->MutableMessage(msg1, field1)->CopyFrom(ref2->GetMessage(*msg2, field2));
                 break;
             case FieldDescriptor::CPPTYPE_STRING:
-                // not support
+                ref1->SetString(msg1, field1, ref2->GetString(*msg2, field2));
                 break;
         }
         // check size

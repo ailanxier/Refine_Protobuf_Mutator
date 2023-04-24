@@ -6,8 +6,8 @@ using namespace std;
 using namespace google::protobuf;
 using namespace protobuf_mutator;
 
-#define SEED_NUM 4
-#define MUTATION_TIMES 4000
+#define SEED_NUM 1000
+#define MUTATION_TIMES 10
 char temp[MAX_BUFFER_SIZE];
 int main(int argc, char *argv[]){
     auto read_file_from_path = [&](const string& path) {
@@ -16,11 +16,11 @@ int main(int argc, char *argv[]){
         buf << input.rdbuf(); 
         return buf.str(); 
     };
-    Root msg, add_msg;
     random_device rd;
     uint seed = rd();
     AFLCustomHepler* mutatorHelper = afl_custom_init(nullptr, seed);
     if(argv[1][0] == 'c'){
+        Root msg, add_msg;
         for(int i = 0;i < SEED_NUM;i++){
             int remain_size = MAX_BINARY_INPUT_SIZE;
             print_words({"-------------------", "original message", ToStr(i), "-------------------"}, 3, NO_STAR_LINE);
@@ -55,6 +55,7 @@ int main(int argc, char *argv[]){
         }
         print_words({"create randomEngine seed:", ToStr(seed)},2);
     }else if(argv[1][0] == 'r'){
+        Root msg;
         string data = read_file_from_path(argv[2]);
         if(!LoadProtoInput(true, (const uint8_t *)data.c_str(), data.size(), &msg))
             ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
@@ -64,7 +65,8 @@ int main(int argc, char *argv[]){
         string textData = msg.DebugString();
         out << textData;
         out.close();
-    }else{
+    }else if(argv[1][0] == '1'){
+        Root msg;
         string folder_path = text_seed_path;
         DIR* dirp = opendir(folder_path.c_str());
         struct dirent * dp;
@@ -94,6 +96,38 @@ int main(int argc, char *argv[]){
             out.close();
         }
         closedir(dirp);
+    }else{
+        // TESTRoot mutation_msg, crossover_msg;
+        // for(int i = 0;i < SEED_NUM;i++){
+        //     int remain_size = MAX_BINARY_INPUT_SIZE;
+        //     print_words({"-------------------", "original message", ToStr(i), "-------------------"}, 3, NO_STAR_LINE);
+        //     mutation_msg.Clear();
+        //     createRandomMessage(&mutation_msg, remain_size);
+        //     remain_size = MAX_BINARY_INPUT_SIZE;
+        //     crossover_msg.Clear();
+        //     createRandomMessage(&crossover_msg, remain_size);
+        //     int cnt = MUTATION_TIMES;
+        //     while(cnt--){
+        //         uint8_t *out_buf = nullptr;
+        //         string data1 = mutation_msg.SerializeAsString(), data2 = crossover_msg.SerializeAsString();
+        //         remain_size = MAX_BINARY_INPUT_SIZE;
+        //         int new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data1.c_str(), data1.size(),
+        //                             &out_buf, (uint8_t*)data2.c_str(), data2.size(), remain_size);
+        //                             cout<<mutation_msg.DebugString()<<endl;
+        //         LoadProtoInput(USE_BINARY_PROTO, out_buf, new_size, &mutation_msg);
+        //         data1 = mutation_msg.SerializeAsString();
+        //         remain_size = MAX_BINARY_INPUT_SIZE;
+        //         new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data2.c_str(), data2.size(),
+        //                             &out_buf, (uint8_t*)data1.c_str(), data1.size(), remain_size);
+        //         LoadProtoInput(USE_BINARY_PROTO, out_buf, new_size, &crossover_msg);
+        //     }
+        //     ofstream out(mutation_path + ToStr(i), ios::trunc | ios::binary);
+        //     mutation_msg.SerializeToOstream(&out);
+        //     out.close();
+        //     ofstream add_out(crossover_path + ToStr(i), ios::trunc | ios::binary);
+        //     crossover_msg.SerializeToOstream(&out);
+        //     out.close();
+        // }        
     }
     return 0;
 }

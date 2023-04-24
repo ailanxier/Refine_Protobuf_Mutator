@@ -59,7 +59,9 @@ add_subdirectory(protobuf_mutator)
 add_subdirectory(postprocess)
 add_subdirectory(mutation_test)
 add_subdirectory(proto_seed)
+add_subdirectory(test)
 link_libraries(protobuf)
+
 
 
 
