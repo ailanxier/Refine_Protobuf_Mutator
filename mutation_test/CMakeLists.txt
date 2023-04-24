@@ -1,8 +1,0 @@
-file(GLOB TEST_SRC_LIST "*.cpp")
-set(PROTO_SRC ${CMAKE_SOURCE_DIR}/proto/openfhe_ckks.pb.cc)
-add_executable(test ${TEST_SRC_LIST} ${PROTO_SRC})
-target_link_libraries(test ${PROTOBUF_LIBRARIES})
-target_include_directories(test PUBLIC ${CMAKE_SOURCE_DIR}/postprocess)
-target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-add_dependencies(test ${CUSTOM_MUTATOR_NAME})
-target_link_libraries(test ${CUSTOM_MUTATOR_NAME})

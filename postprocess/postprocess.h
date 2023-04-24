@@ -1,8 +1,10 @@
 #pragma once
 
 #include <fstream>
-#include "openfhe_ckks_postprocess.h"
-
+#include "protobuf_mutator/mutator.h"
+#include "proto/proto_setting.h"
+using namespace std;
+using namespace protobuf_mutator;
 // #define INITIAL_SIZE (500)
 #define MAX(x, y) ( ((x) > (y)) ? (x) : y )
 #define USE_BINARY_PROTO true
@@ -48,17 +50,17 @@ extern "C"{
     
     int afl_custom_fuzz(AFLCustomHepler *m, unsigned char *buf, int buf_size, unsigned char **out_buf,
                     unsigned char *add_buf, int add_buf_size, int max_size) {                 
-        Root input1;                                                                                        
-        Root input2;                                                                                    
+        TESTRoot input1;                                                                                        
+        TESTRoot input2;                                                                                    
         return MutationOrCrossoverOnProtobuf(m, USE_BINARY_PROTO, buf, buf_size, out_buf,                                 
                                     add_buf, add_buf_size, MAX_BINARY_INPUT_SIZE, &input1, &input2);                      
     }
 
     // A post-processing function to use right before AFL++ writes the test case to disk in order to execute the target.
     int afl_custom_post_process(AFLCustomHepler *m, unsigned char *buf, int buf_size, unsigned char**out_buf) {                                                                             
-        Root input;                                                                              
-        if (LoadProtoInput(USE_BINARY_PROTO, buf, buf_size, &input))                                                         
-            return PostProcessMessage(input, out_buf, m->temp);                                                      
+        // Root input;                                                                              
+        // if (LoadProtoInput(USE_BINARY_PROTO, buf, buf_size, &input))                                                         
+        //     return PostProcessMessage(input, out_buf, m->temp);                                                      
         return 0;                                                                                                       
     }
 }          

@@ -4,7 +4,7 @@ int MutationOrCrossoverOnProtobuf(AFLCustomHepler *m, bool binary, unsigned char
                             unsigned char **out_buf, unsigned char *add_buf, int add_buf_size, 
                                        int max_size, Message* input1, Message* input2) {
     int now = GetRandomIndex(10), out_size;
-    if(now <= 5){
+    if(now <= 8){
         memcpy(m->GetOutBuf(), buf, buf_size);
         out_size = CustomProtoMutate(binary, m->GetOutBuf(), buf_size, max_size, input1);
         *out_buf = m->GetOutBuf();

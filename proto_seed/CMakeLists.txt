@@ -1,5 +1,5 @@
 file(GLOB CREATE_SRC_LIST "create_proto_input.cpp")
-add_executable(create ${CREATE_SRC_LIST} ${PROTO_SRC} ${CMAKE_SOURCE_DIR}/test/xml.pb.cc)
+add_executable(create ${CREATE_SRC_LIST} ${PROTO_SRC})
 target_link_libraries(create ${PROTOBUF_LIBRARIES})
 target_include_directories(create PUBLIC ${CMAKE_SOURCE_DIR}/postprocess)
 target_include_directories(create PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

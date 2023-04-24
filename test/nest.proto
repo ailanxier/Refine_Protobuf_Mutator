@@ -1,0 +1,31 @@
+syntax = "proto3";
+package nest;
+message Level7 {
+  repeated int32 repeate_level7 = 4;
+}
+message Level6 {
+  repeated Level7 repeate_level7 = 4;
+}
+
+message Level5 {
+  repeated Level6 repeate_level6 = 4;
+}
+
+message Level4 {
+  repeated Level5 repeate_level5 = 4;
+}
+
+message Level3 {
+  repeated Level4 repeate_level4 = 4;
+}
+message Level2 {
+  repeated Level3 repeate_level3 = 4;
+}
+
+message Level1 {
+  repeated Level2 repeate_level2 = 4;
+}
+
+message Level0 {
+  repeated Level1 repeate_level1 = 4;
+}
