@@ -98,13 +98,7 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     // TEST: manually set ringDim
     param->set_ringdim(ringDim);
     param->set_securitylevel(SecurityLevel::HEStd_NotSet);    
-    // if(param->securitylevel() == HEStd_NotSet)
-    //     param->set_ringdim(ringDim);
-    // else {
-    //     param->set_ringdim(0);
-    //     // Since ringDim can't be 
-    //     ringDim = ringDimValue[GetRandomIndex(ringDimValue.size() - 1)];
-    // }
+
     if(param->has_batchsize()){
         //  Only be set to zero or a power of two.
         auto size = param->batchsize();
@@ -183,7 +177,7 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
             api.mutable_rotateonelist()->set_src(src);
             auto len = msg.evaldata().alldatalists()[src].datalist_size();
             // TEST: index is in range [-len, len]
-            index = clampToRange(index, {-len, len});
+            index = clampToRange(index, {-len + 1, len - 1});
             api.mutable_rotateonelist()->set_index(index);
             indexMap[index] = true;
         }
@@ -192,7 +186,7 @@ int PostProcessMessage(Root& msg, unsigned char **out_buf, char *temp){
     while(param->rotateindexes_size() > maxRotateIndexedNum)
         param->mutable_rotateindexes()->RemoveLast();
     for(auto& index : *param->mutable_rotateindexes()){
-        index = clampToRange(index, {-(int)ringDim / 2, (int)ringDim / 2});
+        index = clampToRange(index, {-(int)ringDim / 2 + 1, (int)ringDim / 2 - 1});
         if(indexMap.find(index) != indexMap.end())
             indexMap[index] = false;
     }

@@ -91,3 +91,5 @@ proto_seed/in/
 afl/new_in/
 afl/in/
 *.png
+test/mutation/**
+test/crossover/**

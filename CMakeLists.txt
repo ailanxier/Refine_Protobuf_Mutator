@@ -55,7 +55,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # link_libraries(asan)
 
 # ===================== OPENFHE-BGV =====================
-set(CUSTOM_MUTATOR_NAME "openfhe_bgv_protobuf_mutator")
+set(CUSTOM_MUTATOR_NAME "RPM_openfhe_bgv")
 add_subdirectory(protobuf_mutator)
 add_subdirectory(postprocess)
 add_subdirectory(mutation_test)
