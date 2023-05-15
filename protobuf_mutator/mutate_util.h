@@ -8,6 +8,7 @@ namespace protobuf_mutator {
     #define DELETE_REPEATED_FIELD_PROBABILITY 4
     #define DELETE_SIMPLE_FIELD_PROBABILITY 2 
     #define MUTATE_PROBABILITY 3 
+    #define MUTATE_BIT_PROBABILITY 100
     
     using std::min;
     using std::placeholders::_1;
@@ -78,6 +79,7 @@ namespace protobuf_mutator {
         return value;
     }
     inline bool CanMutate() { return GetRandomNum(1, MUTATE_PROBABILITY) == 1;}
+    inline bool CanMutateBit() { return GetRandomNum(1, MUTATE_BIT_PROBABILITY) == 1;}
     inline bool CanDeleteRepeatedField() { return GetRandomNum(1, DELETE_REPEATED_FIELD_PROBABILITY) == 1;}
     inline bool CanDeleteSimpleField() { return GetRandomNum(1, DELETE_SIMPLE_FIELD_PROBABILITY) == 1;}
     inline bool IsMessageType(const FieldDescriptor* field) {return field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE;}
@@ -114,3 +116,5 @@ namespace protobuf_mutator {
     // Add some new simple fields from message2 to the corresponding unset fields in message1.
     void CrossoverAddUnsetField(Message* msg1, const Message* msg2, const FieldDescriptor* field1, const FieldDescriptor* field2, int& remain_size);
 }  // namespace protobuf_mutator
+
+

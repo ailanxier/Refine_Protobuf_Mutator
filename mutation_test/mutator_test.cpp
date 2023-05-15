@@ -110,11 +110,11 @@ int main(int argc, char *argv[]){
         string str = string((char*)post_out, new_size);
 
         LoadProtoInput(USE_BINARY_PROTO, post_out, new_size, &msg1);
-		// data1 = msg1.DebugString();
-        print_words({"-------------------", "post msg1", "-------------------"}, 2);
         msg1.PrintDebugString();
-		// print_diff(test_str, data1);
-        // data1 = msg1.SerializeAsString();
+        print_words({"-------------------", "post msg1", "-------------------"}, 2);
+		data1 = msg1.DebugString();
+		print_diff(test_str, data1);
+        data1 = msg1.SerializeAsString();
     }
     // print_words({"-------------------", "msg1", "-------------------"}, 2);
     // msg1.PrintDebugString();

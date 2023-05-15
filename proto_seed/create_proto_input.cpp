@@ -20,6 +20,7 @@ int main(int argc, char *argv[]){
     random_device rd;
     uint seed = rd();
     AFLCustomHepler* mutatorHelper = afl_custom_init(nullptr, seed);
+    // create new seed and every seed has been mutated "MUTATION_TIMES" times
     if(argv[1][0] == 'c'){
         for(int i = 0;i < SEED_NUM;i++){
             int remain_size = MAX_BINARY_INPUT_SIZE;
@@ -54,7 +55,9 @@ int main(int argc, char *argv[]){
             out.close();
         }
         print_words({"create randomEngine seed:", ToStr(seed)},2);
-    }else if(argv[1][0] == 'r'){
+    }
+    // binary format to text format
+    else if(argv[1][0] == 'r'){
         string data = read_file_from_path(argv[2]);
         if(!LoadProtoInput(true, (const uint8_t *)data.c_str(), data.size(), &msg))
             ERR_EXIT("[afl_custom_post_process] LoadProtoInput Error\n");
@@ -64,7 +67,9 @@ int main(int argc, char *argv[]){
         string textData = msg.DebugString();
         out << textData;
         out.close();
-    }else{
+    }
+    // text format to binary format
+    else{
         string folder_path = text_seed_path;
         DIR* dirp = opendir(folder_path.c_str());
         struct dirent * dp;
