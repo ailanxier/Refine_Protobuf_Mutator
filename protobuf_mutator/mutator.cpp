@@ -1,6 +1,7 @@
 #include "mutator.h"
 namespace protobuf_mutator {
     using std::placeholders::_1;
+    // mutationType must contain None
     void restoreMutationBitset(MutationBitset& b) { b.reset(); b.set((int)FieldMuationType::None);}
     void restoreCrossoverBitset(CrossoverBitset& b) { b.reset(); b.set((int)CrossoverType::None);}
     inline string DebugEnumStr(FieldMuationType type){
@@ -42,6 +43,7 @@ namespace protobuf_mutator {
             cout<<std::right<<std::setw(30)<<name<<" "<<DebugEnumStr(mutationType)<<" "<< remain_size<<std::endl;
         }
     }
+
     inline void printCrossover(CrossoverType crossoverType, const FieldDescriptor* field, const Message* msg, int remain_size){
         if(DEBUG_PRINT){
             cout.fill(' ');
@@ -100,6 +102,7 @@ namespace protobuf_mutator {
                 TRY_MUTATE_FIELD;
                 if(IsMessageType(field)){
                     int field_size = ref->FieldSize(*msg, field);
+                    // Recursively processing all embedded message types
                     for(int i = 0; i < field_size; i++) 
                         MessageMutation(ref->MutableRepeatedMessage(msg, field, i), remain_size);
                 }
@@ -122,6 +125,7 @@ namespace protobuf_mutator {
 
     void Mutator::TryMutateField(Message* msg, const FieldDescriptor* field, MutationBitset& allowed_mutations, int& remain_size){
         int tot = allowed_mutations.count();
+        // select mutation type
         int order = GetRandomIndex(tot);
         int pos = allowed_mutations._Find_first();
         for(int i = 0; i < order; i++)
@@ -152,7 +156,7 @@ namespace protobuf_mutator {
                         auto old_oneField = ref->GetOneofFieldDescriptor(*msg, oneof);
                         int old_index = old_oneField->index_in_oneof();
                         MutateSetField(msg, old_oneField, remain_size);
-                        // If the index does not change, then mutate the field itself 
+                        // If the index does not change and field is embedded message, then mutate the message itself 
                         if(old_index == ref->GetOneofFieldDescriptor(*msg, oneof)->index_in_oneof() && IsMessageType(old_oneField))
                             MessageMutation(ref->MutableMessage(msg, old_oneField), remain_size);
                     }else
@@ -206,7 +210,7 @@ namespace protobuf_mutator {
                     }else if(current_field2){
                         CROSSOVER_REPLACE;
                         TRY_CROSSOVER_FIELD(current_field1, current_field2);
-                        // recursive crossover for embedded message types.
+                        // recursive crossover for embedded message type if do not replace
                         if(NO_CROSSOVER && IsMessageType(current_field1) && 
                             current_field1->index_in_oneof() == current_field2->index_in_oneof())
                             MessageCrossover(ref1->MutableMessage(msg1, current_field1), &ref2->GetMessage(*msg2, current_field2), remain_size);
@@ -217,6 +221,7 @@ namespace protobuf_mutator {
                 CROSSOVER_ADD;
                 CROSSOVER_REPLACE;
                 TRY_CROSSOVER_FIELD(field1, field2);
+                // recursive crossover for embedded message type if do nothing
                 if(NO_CROSSOVER && IsMessageType(field1)){
                     int field_size = min(ref1->FieldSize(*msg1, field1), ref2->FieldSize(*msg2, field2));
                     for(int i = 0; i < field_size; i++)

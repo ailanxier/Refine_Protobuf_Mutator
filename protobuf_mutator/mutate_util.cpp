@@ -30,7 +30,7 @@ namespace protobuf_mutator {
         void mutate(uint64_t* value) { RepeatMutate(value, std::bind(MutateUInt64, _1)); }
         void mutate(float* value) { RepeatMutate(value, std::bind(MutateFloat, _1)); }
         void mutate(double* value) { RepeatMutate(value, std::bind(MutateDouble, _1)); }
-        void mutate(bool* value) { RepeatMutate(value, std::bind(MutateBool, _1)); }
+        void mutate(bool* value) { *value = !*value; }
         void mutate(string* value) { RepeatMutate(value, std::bind(MutateString, _1)); }
     }
 
@@ -54,6 +54,7 @@ namespace protobuf_mutator {
                 if(IsMessageType(new_field)){
                     auto new_msg = ref->GetMessage(*msg, new_field).New();
                     remain_size -= GetMessageSize(new_msg);
+                    // recursive create random message
                     createRandomMessage(new_msg, remain_size);
                     ref->SetAllocatedMessage(msg, new_msg, new_field);
                 }else
@@ -100,6 +101,7 @@ namespace protobuf_mutator {
                 case FieldDescriptor::CPPTYPE_MESSAGE:{
                     auto newMsg = ref->AddMessage(msg, field);
                     int msg_max_size = max_size - GetMessageSize(msg);
+                    // Recursive Nesting for embedded messages
                     createRandomMessage(newMsg, msg_max_size);
                     break;
                 }
@@ -331,18 +333,20 @@ namespace protobuf_mutator {
             int newIndex = index;
             mutate(&newIndex);
             newIndex = NotNegMod(newIndex, oneof_desc->field_count());
-            // If the index does not change, then mutate the field itself
-            if(index == newIndex) return;
-            auto new_field = oneof_desc->field(newIndex);
-            if(IsMessageType(new_field)){
-                auto new_msg = ref->GetMessage(*msg, new_field).New();
-                // XXX: Unable to get the byte size of the field
-                createRandomMessage(new_msg, remain_size);
-                ref->SetAllocatedMessage(msg, new_msg, new_field);
-                remain_size = max_size - GetMessageSize(msg);
-                return;
+            // If the index does not change and field is embedded message, mutate the message itself in mutate.cpp
+            if(index == newIndex && IsMessageType(field)) return;
+            if(index != newIndex){
+                auto new_field = oneof_desc->field(newIndex);
+                if(IsMessageType(new_field)){
+                    auto new_msg = ref->GetMessage(*msg, new_field).New();
+                    // XXX: Unable to get the byte size of the field
+                    createRandomMessage(new_msg, remain_size);
+                    ref->SetAllocatedMessage(msg, new_msg, new_field);
+                    remain_size = max_size - GetMessageSize(msg);
+                    return;
+                }
+                else field = new_field; 
             }
-            else field = new_field; 
         }
         switch (field->cpp_type()){
             case FieldDescriptor::CPPTYPE_INT32:{

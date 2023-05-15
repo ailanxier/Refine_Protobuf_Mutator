@@ -2,6 +2,7 @@
 
 #include "protobuf_mutator/mutator.h"
 #include "proto/proto_setting.h"
+#include <fstream>
 using namespace std;
 using namespace protobuf_mutator;
 uint32_t dataNum = 0;
