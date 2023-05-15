@@ -48,11 +48,8 @@ int main(int argc, char *argv[]){
             remain_size = MAX_BINARY_INPUT_SIZE;
             int new_size = afl_custom_fuzz(mutatorHelper, (uint8_t*)data1.c_str(), data1.size(),
                                 &out_buf, (uint8_t*)data2.c_str(), data2.size(), remain_size);
-            auto t = getTime();
-            once_total_time += t;
-            // cout<<"Time: "<<t<<endl;
         }
-        
+        once_total_time = getTime();
         cout<<"Average Time: "<<once_total_time / MUTATION_TIMES<<endl;
         total_time += once_total_time / MUTATION_TIMES;
     }

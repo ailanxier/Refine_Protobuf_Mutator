@@ -1,11 +1,11 @@
 #pragma once
 
-#include "test/nest.pb.h"
+// #include "test/nest.pb.h"
 // #include "openfhe_ckks.pb.h"
-// #include "test/mutator_test_proto3.pb.h"
-using TESTRoot = nest::Level0;
+#include "test/field.pb.h"
+// using TESTRoot = nest::Level0;
 // using TESTRoot = OpenFHE::OpenFHE_RootMsg;
-// using TESTRoot = pm::Msg3;
+using TESTRoot = fieldTest::Msg3;
 #define MAX_BINARY_INPUT_SIZE (1500)
 #define MAX_BUFFER_SIZE (2000)
 #define USE_SEED 0

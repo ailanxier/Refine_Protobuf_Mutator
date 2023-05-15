@@ -25,7 +25,8 @@ int main(int argc, char *argv[]){
         remain_size = MAX_BINARY_INPUT_SIZE;
         crossover_msg.Clear();
         createRandomMessage(&crossover_msg, remain_size);
-        int cnt = MUTATION_TIMES;
+        // do not mutate in test
+        // int cnt = MUTATION_TIMES;
         // while(cnt--){
         //     uint8_t *out_buf = nullptr;
         //     string data1 = mutation_msg.SerializeAsString(), data2 = crossover_msg.SerializeAsString();

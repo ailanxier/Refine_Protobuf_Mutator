@@ -1,7 +1,6 @@
 syntax = "proto3";
 
-package pm;
-
+package fieldTest;
 
 message Msg3 {
   enum Enum {
